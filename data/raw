@@ -1,1 +1,31 @@
-
+question_id,question_text,answer_correct,score_range
+Q01,"Definește o Rețea Neuronală Artificială (RNA).","O RNA este un model de calcul inspirat de creier, format din neuroni interconectați care procesează informațiile.",5.0
+Q02,"Care este rolul funcției de activare într-un neuron?","Funcția de activare introduce non-liniaritate, permițând rețelei să învețe și să rezolve probleme complexe.",3.0
+Q03,"Explică ce este backpropagation.","Backpropagation este un algoritm folosit pentru antrenarea rețelelor neuronale prin calcularea gradientului funcției de pierdere în raport cu toți parametrii.",5.0
+Q04,"Ce este un Word Embedding?","Un Word Embedding este o reprezentare vectorială densă a unui cuvânt, care captează contextul semantic și relațiile dintre cuvinte.",4.0
+Q05,"Numește o diferență cheie între rețelele CNN și RNN.","CNN-urile sunt pentru date spațiale (imagini), iar RNN-urile sunt concepute pentru date secvențiale (text).",3.0
+Q06,"Ce este overfitting-ul?","Overfitting-ul apare când un model învață zgomotul și detaliile specifice din setul de antrenament, performând slab pe date noi.",2.0
+Q07,"Descrie cel mai comun algoritm de optimizare folosit în antrenare.","Algoritmul cel mai comun este Stochastic Gradient Descent (SGD) sau variantele sale (Adam, RMSProp).",4.0
+Q08,"Ce este o rețea siameză (Siamese Network)?","O rețea siameză este o arhitectură cu sub-rețele identice (cu greutăți partajate) folosită pentru a măsura similaritatea dintre două intrări.",5.0
+Q09,"Care este scopul stratului de pooling într-un CNN?","Stratul de pooling reduce dimensiunea spațială a reprezentării, scăzând numărul de parametri și făcând detecția de caracteristici mai robustă.",3.0
+Q10,"Explică rolul funcției Softmax.","Softmax este o funcție folosită în stratul de ieșire al clasificatorilor, care transformă scorurile numerice într-o distribuție de probabilitate.",2.0
+Q11,"Ce este gradient vanishing?","Gradient vanishing este o problemă în RNN-uri și rețele deep, unde gradientul devine extrem de mic în straturile inferioare, oprind antrenarea.",4.0
+Q12,"Numește două tipuri de rețele neuronale recurente (RNN).","Două tipuri sunt Long Short-Term Memory (LSTM) și Gated Recurrent Unit (GRU).",3.0
+Q13,"Ce reprezintă Loss Function (Funcția de Pierdere)?","Funcția de pierdere măsoară diferența dintre rezultatul prezis de model și valoarea reală (ground truth).",2.0
+Q14,"Care este rolul unui strat Embedding în NLP?","Stratul Embedding transformă inputul textual discret (cuvinte/token-uri) în vectori densi și continui.",3.0
+Q15,"Ce face un autoencoder?","Un autoencoder este o rețea neuronală ne-supervizată folosită pentru învățarea unei reprezentări eficiente (codificări) a datelor.",4.0
+Q16,"Definește termenul 'Epocă' în antrenarea RN.","O epocă reprezintă o iterație completă înainte și înapoi prin întregul set de antrenament.",2.0
+Q17,"Ce este un Transformer în NLP?","Un Transformer este o arhitectură de rețea neuronală care se bazează pe mecanismul de Self-Attention (Atenție) pentru a pondera importanța diferitelor cuvinte din secvență.",5.0
+Q18,"Care este beneficiul principal al stratului Dropout?","Dropout-ul este o tehnică de regularizare care previne overfitting-ul prin dezactivarea aleatorie a unui procent de neuroni în timpul antrenării.",3.0
+Q19,"Explică conceptul de transfer learning.","Transfer learning este o tehnică unde un model pre-antrenat pe o sarcină mare este refolosit și ajustat (fine-tuned) pentru o sarcină nouă, dar înrudită.",4.0
+Q20,"Ce sunt hyperparametris? Dă un exemplu.","Hyperparametris sunt parametrii modelului care nu sunt învățați din date, ci sunt setați înainte de antrenare (ex: rata de învățare, numărul de straturi).",3.0
+Q21,"Care este diferența dintre clasificare și regresie?","Clasificarea prezice o etichetă discretă (clasă), iar regresia prezice o valoare continuă.",2.0
+Q22,"Numește o aplicație tipică pentru rețelele CNN.","Recunoașterea de imagini sau clasificarea vizuală.",1.0
+Q23,"Ce înseamnă RNN Bidirecțional?","O RNN bidirecțională procesează secvența de intrare în ambele direcții (înainte și înapoi) pentru a capta contextul complet.",4.0
+Q24,"Explică ce este tokenizarea.","Tokenizarea este procesul de împărțire a unui text în unități mai mici, numite token-uri (cuvinte, sub-cuvinte sau caractere).",3.0
+Q25,"Ce este Batch Normalization?","Batch Normalization este o tehnică care standardizează intrările la un strat intermediar al rețelei, accelerând antrenarea și stabilizând rețeaua.",4.0
+Q26,"Care este scopul metricii F1-score?","F1-score este media armonică între precizie (precision) și acuratețe (recall), utilă în cazurile de dezechilibru de clasă.",3.0
+Q27,"Definește ce este bias-ul în contextul unui neuron.","Bias-ul este o valoare adăugată la suma ponderată a intrărilor, care permite funcției de activare să fie decalată, ajustând pragul de activare.",2.0
+Q28,"Ce este o 'epoch' în antrenarea unui model?","O epoch reprezintă o singură trecere completă a setului de date de antrenament prin rețea.",2.0
+Q29,"Care este funcția unui strat Dense (Complet Conectat)?","Un strat Dense conectează fiecare neuron din stratul anterior cu fiecare neuron din stratul următor.",1.0
+Q30,"Ce este Zero-Shot Learning?","Zero-Shot Learning este abilitatea unui model de a rezolva o sarcină sau de a clasifica obiecte pe care nu le-a văzut în timpul antrenării.",5.0
