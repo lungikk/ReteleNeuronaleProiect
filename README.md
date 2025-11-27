@@ -2,7 +2,7 @@
 **Disciplina:** Rețele Neuronale  
 **Instituție:** POLITEHNICA București – FIIR  
 **Student:** Lungeanu Andrei-Alexandru  
-**Data:** 20/11/2025
+**Data:** 27/11/2025
 
 1. Structura Repository-ului Github (versiunea Etapei 3)
 
