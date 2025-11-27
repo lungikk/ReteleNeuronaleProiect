@@ -10,7 +10,7 @@
 project-name/
 ├── README.md
 ├── docs/
-│   └── datasets/          # descriere seturi de date, surse, diagrame
+│   └── datasets/          caracteristici_dataset , desciere_set_date , descriere_caracteristici
 ├── data/
 │   ├── raw/               # date brute
 │   ├── processed/         # date curățate și transformate
