@@ -1,1 +1,7 @@
-
+Caracteristica	Tip	Unitate	Descriere	Domeniu valori
+question_id	categorial	–	Identificator unic al intrebarii	{Q01...Q30}
+question_text	text	–	Enuntul intrebarii	Sir de caractere
+answer_correct	text	–	Raspunsul de referinta (barem)	Sir de caractere
+score_range	numeric	puncte	Punctajul maxim al intrebarii	1.0 – 5.0
+answer_student	text	–	Raspunsul introdus de student	Sir de caractere
+score_manual	numeric	puncte	Nota finala (eticheta/target)	0.0 – 5.0
