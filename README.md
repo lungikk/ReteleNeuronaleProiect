@@ -36,7 +36,7 @@ project-name/
 
 * **Numar total de observatii:** 1,500 (30 intrebari x 50 raspunsuri per intrebare).
 * **Numar de caracteristici (features):** 6
-* **Tipuri de date:** ☑ Numerice / ☑ Categoriale / ☐ Temporale / ☑ Imagini (Textuale).
+* **Tipuri de date:** ☑ Numerice / ☑ Categoriale / ☐ Temporale / ☐ Imagini (Textuale).
 * **Format fisiere:** ☑ CSV / ☐ TXT / ☐ JSON / ☐ PNG / ☐ Altele: [...]
 
 ### 2.3 Descrierea fiecarei caracteristici
