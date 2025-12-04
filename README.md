@@ -124,16 +124,36 @@ project-name/
 
 ---
 
-## P3
+## P4. Dezvoltare proiect software (SAF)
 
-### 1. Tabelul Nevoie Reală → Soluție CPS → Modul Software
-Nevoie reala concreta | Cum o rezolva SIA-ul vostru | Modul software responsabil
-Reducerea timpului masiv de corectare manuala a testelor scrise (estimat la 30-60 min/test) | Evaluare automata instanta a raspunsurilor textuale -> nota generata in < 5 secunde/raspuns |Neural Network + Scoring Module
-Eliminarea subiectivitatii si inconsistentei in notarea raspunsurilor deschise (eroare umana ~15%) | Calcularea scorului de similaritate semantica fata de barem cu o acuratete estimata de > 85% | Preprocessing + Neural Network (Transformer)
-Gestionarea volumului mare de studenti si necesitatea feedback-ului rapid | Procesarea simultana a cererilor si stocarea rezultatelor pentru 1000+ studenti fara intarzieri | Web Service + Data Logging
+### 1. Tabelul Nevoie Reala -> Solutie CPS -> Modul Software
 
+| Nevoie reala concreta | Cum o rezolva SIA-ul vostru | Modul software responsabil |
+|---|---|---|
+| Reducerea timpului masiv de corectare manuala a testelor scrise (estimat la 30-60 min/test) | Evaluare automata instanta a raspunsurilor textuale -> nota generata in < 5 secunde/raspuns | Neural Network + Scoring Module |
+| Eliminarea subiectivitatii si inconsistentei in notarea raspunsurilor deschise (eroare umana ~15%) | Calcularea scorului de similaritate semantica fata de barem cu o acuratete estimata de > 85% | Preprocessing + Neural Network (Transformer) |
+| Gestionarea volumului mare de studenti si necesitatea feedback-ului rapid | Procesarea simultana a cererilor si stocarea rezultatelor pentru 1000+ studenti fara intarzieri | Web Service + Data Logging |
 
-### 2. Diagrama State Machine a Întregului Sistem
+---
+
+## 2. Contributia Voastra Originala la Setul de Date – 100% din Total
+
+**Total observatii finale:** 1,500 (dupa Etapa 3 + Etapa 4)
+**Observatii originale:** 1,500 (100%)
+
+**Tipul contributiei:**
+[x] Date generate prin simulare fizica / programatica
+[ ] Date achizitionate cu senzori proprii
+[ ] Etichetare/adnotare manuala
+[ ] Date sintetice prin metode avansate
+
+---
+
+### 3. Diagrama State Machine a Intregului Sistem
+
+<img width="589" height="798" alt="state_machine" src="https://github.com/user-attachments/assets/0cd50516-f398-4db9-bd80-887711b59b7e" />
+
+**Fluxul text:**
 IDLE -> WAIT_SUBMISSION (student input) -> RECEIVE_TEXT -> 
 VALIDATE_INPUT (not empty, language check) ->
   ├─ [Valid] -> PREPROCESS_TEXT (clean, tokenize) -> RN_INFERENCE (Transformer Embedding) -> 
@@ -143,28 +163,98 @@ VALIDATE_INPUT (not empty, language check) ->
        ↓ [System Update / Maintenance]
      SAFE_SHUTDOWN -> STOP
 
+**Legenda obligatorie:**
+
 ### Justificarea State Machine-ului ales:
 
-[cite_start]Am ales arhitectura de **procesare secventiala a textului (NLP Pipeline)** pentru ca proiectul nostru vizeaza **reducerea timpului de corectare** [cite: 14] [cite_start]si **eliminarea subiectivitatii**[cite: 6], necesitand un flux liniar si determinist de transformare a textului brut in nota numerica finala.
+Am ales arhitectura de **procesare secventiala a textului (NLP Pipeline)** pentru ca proiectul nostru vizeaza reducerea timpului de corectare si eliminarea subiectivitatii, necesitand un flux liniar si determinist de transformare a textului brut in nota numerica finala.
 
 Starile principale sunt:
-1. **[WAIT_SUBMISSION]**: Sistemul asteapta pasiv input-ul de la interfata studentului (stare IDLE cu consum redus de resurse).
+1. **[IDLE]**: Sistemul asteapta pasiv input-ul de la interfata studentului (consum redus de resurse).
 2. **[PREPROCESS_TEXT]**: Curatarea automata (lowercasing, eliminare punctuatie, tokenizare) pentru a normaliza datele inainte de intrarea in retea.
 3. **[RN_INFERENCE]**: Reteaua Neuronala Transformer proceseaza textul si il transforma intr-un vector semantic dens (embedding).
-4. [cite_start]**[CALCULATE_SIMILARITY]**: Algoritmul compara matematic vectorul studentului cu cel al baremului (raspuns corect) si mapeaza distanta la o nota (1-10)[cite: 48].
+4. **[CALCULATE_SIMILARITY]**: Algoritmul compara matematic vectorul studentului cu cel al baremului si mapeaza distanta la o nota (1-10).
 
 Tranzitiile critice sunt:
-- **[VALIDATE_INPUT]** → **[PREPROCESS_TEXT]**: Se intampla doar cand textul trece verificarile de integritate (nu este gol, este string valid).
-- **[ANY_STATE]** → **[LOG_ERROR]**: Se declanseaza cand apar exceptii (ex: text corupt, caractere necodabile, timeout la baza de date).
+- **[VALIDATE_INPUT]** -> **[PREPROCESS_TEXT]**: Se intampla doar cand textul trece verificarile de integritate (nu este gol, este string valid).
+- **[ANY_STATE]** -> **[LOG_ERROR]**: Se declanseaza cand apar exceptii (ex: text corupt, timeout).
 
-Starea **LOG_ERROR** este esentiala pentru ca in context educational studentii pot trimite raspunsuri gresite tehnic (fisiere corupte, input gol) sau pot aparea probleme de conexiune la server, iar sistemul trebuie sa inregistreze eroarea fara a se bloca (crash) pentru ceilalti utilizatori.
+Starea **LOG_ERROR** este esentiala pentru ca in context educational studentii pot trimite raspunsuri gresite tehnic, iar sistemul trebuie sa inregistreze eroarea fara a se bloca (crash).
 
-[cite_start]Bucla de feedback functioneaza astfel: Profesorul valideaza notele generate automat, iar eventualele corectii manuale sunt salvate in baza de date pentru a fi incluse in setul de antrenament (`train.csv`) pentru **auto-invatarea** si rafinarea modelului[cite: 54].
+---
 
+### 4. Scheletul Complet al celor 3 Module
+
+Toate cele 3 module pornesc si ruleaza fara erori.
+
+| **Modul** | **Tehnologie** | **Status** |
+|-----------|----------------|------------|
+| **1. Data Logging / Acquisition** | Python (`pandas`, `random`) | Functional. Genereaza CSV cu 1500 intrari. |
+| **2. Neural Network Module** | Python (`sentence-transformers`) | Definit. Modelul Transformer este incarcat si functional pentru inferenta (embedding). |
+| **3. Web Service / UI** | Python (CLI Demo / `input()`) | Functional. Permite introducerea unui raspuns si afiseaza nota. |
+
+#### Detalii per modul:
+
+**Modul 1: Data Acquisition (`src/data_acquisition/`)**
+- Scriptul `generate_data.py` ruleaza fara erori si produce fisierul `data/raw/asag_simulated_train_data.csv` cu structura corecta (6 coloane).
+- Include logica de simulare a raspunsurilor studentilor.
+
+**Modul 2: Neural Network (`src/neural_network/`)**
+- Scriptul `model.py` defineste clasa `ASAGModel` care incarca un model Transformer pre-antrenat (`all-MiniLM-L6-v2`) pentru vectorizare.
+- Functia `predict_score()` calculeaza similaritatea cosinus si returneaza o nota (fara antrenare suplimentara momentan, folosind doar weights pre-existente).
+
+**Modul 3: UI / App (`src/app/`)**
+- Scriptul `main.py` ruleaza o interfata simpla in consola (CLI) care cere utilizatorului sa introduca un raspuns la o intrebare aleatorie si afiseaza nota calculata de Modulul 2.
+
+---
+
+## Structura Repository-ului la Finalul Etapei 4
+proiect-rn-[nume-prenume]/
+├── data/
+│   ├── raw/
+│   ├── processed/
+│   ├── generated/  # Date originale
+│   ├── train/
+│   ├── validation/
+│   └── test/
+├── src/
+│   ├── data_acquisition/
+│   ├── preprocessing/  # Din Etapa 3
+│   ├── neural_network/
+│   └── app/  # UI schelet
+├── docs/
+│   ├── state_machine.
+├── models/  
+├── config/
+├── README.md
+├── README_Etapa3.md              
+├── README_Etapa4_Arhitectura_SIA.md 
+└── requirements.txt
+
+---
 
 ## Checklist Final – Bifati Totul Inainte de Predare
 
 ### Documentatie si Structura
-- [x] Tabelul Nevoie -> Solutie -> Modul complet 
-- [x] Diagrama State Machine creata si salvata si postata alaturi de acest readme pe moodle la P3. State Machine pentru proiectul SAF
-- [x] Legenda State Machine scrisa in acest readme 
+- [x] Tabelul Nevoie -> Solutie -> Modul complet (minimum 2 randuri cu exemple concrete completate in README_Etapa4.md)
+- [x] Declaratie contributie 100% date originale completata
+- [x] Cod generare/achizitie date functional si documentat (`src/data_acquisition/`)
+- [x] Dovezi contributie originala (CSV generat)
+- [x] Diagrama State Machine creata si salvata in `docs/state_machine.png`
+- [x] Legenda State Machine scrisa in README_Etapa4.md
+- [x] Repository structurat conform modelului
+
+### Modul 1: Data Logging / Acquisition
+- [x] Cod ruleaza fara erori (`python src/data_acquisition/generate_data.py`)
+- [x] Produce 100% date originale (1500 intrari)
+- [x] CSV generat in format compatibil cu preprocesarea
+
+### Modul 2: Neural Network
+- [ ] Arhitectura RN definita si documentata in cod (`src/neural_network/model.py`)
+- [ ] Modelul poate fi incarcat si folosit pentru inferenta (embedding)
+
+### Modul 3: Web Service / UI
+- [ ] Propunere Interfata ce porneste fara erori (`python src/app/main.py`)
+- [ ] Screenshot demonstrativ in `docs/screenshots/ui_demo.png`
+
+---
