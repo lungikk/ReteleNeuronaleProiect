@@ -4,7 +4,7 @@
 **Student:** Lungeanu Andrei-Alexandru  
 **Data:** 27/11/2025
 
-1. Structura Repository-ului Github (versiunea Etapei 3)
+1. Structura Repository-ului Github (versiunea Etapei 4)
 
 ```
 project-name/
