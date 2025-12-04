@@ -2,7 +2,9 @@
 **Disciplina:** Rețele Neuronale  
 **Instituție:** POLITEHNICA București – FIIR  
 **Student:** Lungeanu Andrei-Alexandru  
-**Data:** 27/11/2025
+**Link Repository GitHub**  https://github.com/lungikk/ReteleNeuronaleProiect.git
+
+**Data:** 04/12/2025
 
 1. Structura Repository-ului Github (versiunea Etapei 4)
 
