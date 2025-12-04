@@ -123,3 +123,48 @@ project-name/
 - [x] Documentatie actualizata in README
 
 ---
+
+## P3
+
+### 1. Tabelul Nevoie Reală → Soluție CPS → Modul Software
+Nevoie reala concreta | Cum o rezolva SIA-ul vostru | Modul software responsabil
+Reducerea timpului masiv de corectare manuala a testelor scrise (estimat la 30-60 min/test) | Evaluare automata instanta a raspunsurilor textuale -> nota generata in < 5 secunde/raspuns |Neural Network + Scoring Module
+Eliminarea subiectivitatii si inconsistentei in notarea raspunsurilor deschise (eroare umana ~15%) | Calcularea scorului de similaritate semantica fata de barem cu o acuratete estimata de > 85% | Preprocessing + Neural Network (Transformer)
+Gestionarea volumului mare de studenti si necesitatea feedback-ului rapid | Procesarea simultana a cererilor si stocarea rezultatelor pentru 1000+ studenti fara intarzieri | Web Service + Data Logging
+
+
+### 2. Diagrama State Machine a Întregului Sistem
+IDLE -> WAIT_SUBMISSION (student input) -> RECEIVE_TEXT -> 
+VALIDATE_INPUT (not empty, language check) ->
+  ├─ [Valid] -> PREPROCESS_TEXT (clean, tokenize) -> RN_INFERENCE (Transformer Embedding) -> 
+               CALCULATE_SIMILARITY (Cosine vs Reference) -> MAP_TO_GRADE -> 
+               GENERATE_FEEDBACK -> LOG_RESULT -> IDLE (loop)
+  └─ [Invalid] -> GENERATE_ERROR_MSG -> LOG_ERROR -> IDLE (loop)
+       ↓ [System Update / Maintenance]
+     SAFE_SHUTDOWN -> STOP
+
+### Justificarea State Machine-ului ales:
+
+[cite_start]Am ales arhitectura de **procesare secventiala a textului (NLP Pipeline)** pentru ca proiectul nostru vizeaza **reducerea timpului de corectare** [cite: 14] [cite_start]si **eliminarea subiectivitatii**[cite: 6], necesitand un flux liniar si determinist de transformare a textului brut in nota numerica finala.
+
+Starile principale sunt:
+1. **[WAIT_SUBMISSION]**: Sistemul asteapta pasiv input-ul de la interfata studentului (stare IDLE cu consum redus de resurse).
+2. **[PREPROCESS_TEXT]**: Curatarea automata (lowercasing, eliminare punctuatie, tokenizare) pentru a normaliza datele inainte de intrarea in retea.
+3. **[RN_INFERENCE]**: Reteaua Neuronala Transformer proceseaza textul si il transforma intr-un vector semantic dens (embedding).
+4. [cite_start]**[CALCULATE_SIMILARITY]**: Algoritmul compara matematic vectorul studentului cu cel al baremului (raspuns corect) si mapeaza distanta la o nota (1-10)[cite: 48].
+
+Tranzitiile critice sunt:
+- **[VALIDATE_INPUT]** → **[PREPROCESS_TEXT]**: Se intampla doar cand textul trece verificarile de integritate (nu este gol, este string valid).
+- **[ANY_STATE]** → **[LOG_ERROR]**: Se declanseaza cand apar exceptii (ex: text corupt, caractere necodabile, timeout la baza de date).
+
+Starea **LOG_ERROR** este esentiala pentru ca in context educational studentii pot trimite raspunsuri gresite tehnic (fisiere corupte, input gol) sau pot aparea probleme de conexiune la server, iar sistemul trebuie sa inregistreze eroarea fara a se bloca (crash) pentru ceilalti utilizatori.
+
+[cite_start]Bucla de feedback functioneaza astfel: Profesorul valideaza notele generate automat, iar eventualele corectii manuale sunt salvate in baza de date pentru a fi incluse in setul de antrenament (`train.csv`) pentru **auto-invatarea** si rafinarea modelului[cite: 54].
+
+
+## Checklist Final – Bifati Totul Inainte de Predare
+
+### Documentatie si Structura
+- [x] Tabelul Nevoie -> Solutie -> Modul complet 
+- [x] Diagrama State Machine creata si salvata si postata alaturi de acest readme pe moodle la P3. State Machine pentru proiectul SAF
+- [x] Legenda State Machine scrisa in acest readme 
