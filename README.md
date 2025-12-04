@@ -151,7 +151,7 @@ project-name/
 
 ### 3. Diagrama State Machine a Intregului Sistem
 
-<img width="589" height="798" alt="state_machine" src="https://github.com/user-attachments/assets/0cd50516-f398-4db9-bd80-887711b59b7e" />
+<img width="589" height="798" alt="state_machine" src="https://github.com/lungikk/ReteleNeuronaleProiect/blob/main/docs/state_machine.png" />
 
 **Fluxul text:**
 IDLE -> WAIT_SUBMISSION (student input) -> RECEIVE_TEXT -> 
