@@ -3,7 +3,7 @@
 **Disciplina:** Retele Neuronale
 **Institutie:** POLITEHNICA Bucuresti – FIIR
 **Student:** Lungeanu Andrei-Alexandru
-**Link Repository GitHub:** [Adauga Link Aici]
+**Link Repository GitHub:** [(https://github.com/lungikk/ReteleNeuronaleProiect.git)]
 **Data:** Ianuarie 2026
 
 ---
@@ -158,5 +158,6 @@ Codul este scris si pregatit. Pasii pentru executie sunt:
 - [ ] Generare grafic Loss Curve
 - [ ] Analiza erorilor pe baza rezultatelor
 - [ ] Screenshot inferenta reala in UI
+
 
 ---
