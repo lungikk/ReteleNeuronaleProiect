@@ -9,18 +9,14 @@ import numpy as np
 import os
 import json
 
-# --- 1. CONFIGURĂRI ---
 TEST_PATH = 'data/test/test.csv'
 MODEL_PATH = 'models/trained_model.pth'
 HISTORY_PATH = 'results/training_history.csv'
 METRICS_SAVE_PATH = 'results/test_metrics.json'
 GRAPH_SAVE_PATH = 'docs/loss_curve.png'
 
-# Detectare device
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# --- 2. DEFINIREA CLASEI MODELULUI ---
-# (Trebuie să fie IDENTICĂ cu cea din train.py pentru a putea încărca greutățile)
 class ASAGTransformerModel(nn.Module):
     def __init__(self):
         super(ASAGTransformerModel, self).__init__()
@@ -44,10 +40,9 @@ class ASAGTransformerModel(nn.Module):
         output = self.regressor(combined)
         return output.squeeze()
 
-# --- 3. FUNCȚIE GENERARE GRAFIC LOSS (Nivel 2 - Obligatoriu) ---
 def plot_learning_curve():
     if not os.path.exists(HISTORY_PATH):
-        print("⚠️ Nu găsesc istoricul antrenării. Rulați train.py întâi.")
+        print(" Nu gasesc istoricul antrenarii. Rulati train.py intai.")
         return
 
     df = pd.read_csv(HISTORY_PATH)
@@ -56,7 +51,7 @@ def plot_learning_curve():
     plt.plot(df['epoch'], df['train_loss'], label='Training Loss', marker='o')
     plt.plot(df['epoch'], df['val_loss'], label='Validation Loss', marker='o')
     
-    plt.title('Curba de Învățare (Loss Curve)')
+    plt.title('Curba de invatare (Loss Curve)')
     plt.xlabel('Epoci')
     plt.ylabel('Loss (MSE)')
     plt.legend()
@@ -68,25 +63,22 @@ def plot_learning_curve():
     print(f"📈 Graficul Loss a fost salvat în: {GRAPH_SAVE_PATH}")
     plt.close()
 
-# --- 4. FUNCȚIE EVALUARE PE TEST SET ---
 def evaluate_model():
-    print(f"--- Începe Evaluarea pe Test Set ---")
+    print(f"--- Incepe Evaluarea pe Test Set ---")
     
-    # Încărcare date test
     if not os.path.exists(TEST_PATH):
-        print(f"EROARE: Nu găsesc {TEST_PATH}")
+        print(f"EROARE: Nu gasesc {TEST_PATH}")
         return
 
     df_test = pd.read_csv(TEST_PATH)
-    print(f"Date test încărcate: {len(df_test)} înregistrări")
+    print(f"Date test incarcate: {len(df_test)} inregistrari")
 
-    # Încărcare Model Antrenat
     model = ASAGTransformerModel().to(device)
     if os.path.exists(MODEL_PATH):
         model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
-        print("✅ Model antrenat încărcat cu succes.")
+        print(" Model antrenat incarcat cu succes.")
     else:
-        print("EROARE: Nu găsesc modelul antrenat. Rulați train.py.")
+        print("EROARE: Nu gasesc modelul antrenat. Rulati train.py.")
         return
 
     model.eval()
@@ -94,12 +86,10 @@ def evaluate_model():
     predictions = []
     actuals = []
 
-    # Inferență (Batch by batch ar fi ideal, dar aici facem totul odată pt simplitate la 200 date)
-    # Dacă ai eroare de memorie, împarte în batch-uri ca la train.py
     batch_size = 32
     total_samples = len(df_test)
     
-    print("Se rulează predicțiile...")
+    print("Se ruleaza predictiile...")
     
     with torch.no_grad():
         for i in range(0, total_samples, batch_size):
@@ -111,28 +101,21 @@ def evaluate_model():
             
             preds = model(stud_texts, corr_texts)
             
-            # Gestionare caz batch=1 sau output scalar
             if preds.ndim == 0:
                 preds = preds.unsqueeze(0)
                 
             predictions.extend(preds.cpu().numpy())
             actuals.extend(scores)
 
-    # --- 5. CALCUL METRICI ---
     predictions = np.array(predictions)
     actuals = np.array(actuals)
     
-    # 1. MSE (Mean Squared Error)
     mse = mean_squared_error(actuals, predictions)
     
-    # 2. MAE (Mean Absolute Error)
     mae = mean_absolute_error(actuals, predictions)
     
-    # 3. Pearson Correlation (Cât de bine urmărește trendul notelor)
     corr, _ = pearsonr(actuals, predictions)
     
-    # 4. Acuratețe Personalizată (Predicție în marja de 0.5 puncte)
-    # Considerăm corect dacă |pred - actual| <= 0.5
     accurate_predictions = np.sum(np.abs(predictions - actuals) <= 0.5)
     accuracy = accurate_predictions / total_samples
 
@@ -143,8 +126,7 @@ def evaluate_model():
         "test_accuracy_tolerance_0.5": round(accuracy, 4) # Asta e metrica pt Nivel 1
     }
 
-    # Afișare rezultate
-    print("\n📊 REZULTATE FINALE PE TEST:")
+    print("\n REZULTATE FINALE PE TEST:")
     print(f"   MSE (Eroare pătratică): {mse:.4f}")
     print(f"   Pearson Correlation:    {corr:.4f} (Țintă > 0.8)")
     print(f"   Acuratețe (marjă 0.5p): {accuracy*100:.2f}% (Țintă >= 65%)")
@@ -154,10 +136,7 @@ def evaluate_model():
         json.dump(metrics, f, indent=4)
     print(f"Metricile au fost salvate în: {METRICS_SAVE_PATH}")
 
-# --- MAIN ---
 if __name__ == "__main__":
-    # 1. Generăm graficul din istoric
     plot_learning_curve()
     
-    # 2. Calculăm notele pe test
     evaluate_model()
