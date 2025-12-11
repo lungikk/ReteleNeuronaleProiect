@@ -19,7 +19,6 @@ LEARNING_RATE = 2e-4
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f"🚀 Antrenarea va rula pe: {device}")
 
-# --- 2. DEFINIRE DATASET ---
 class ASAGDataset(Dataset):
     """
     Clasă care transformă CSV-ul în format compatibil PyTorch.
