@@ -1,153 +1,88 @@
 import pandas as pd
 import numpy as np
-import torch
-import torch.nn as nn
-from torch.utils.data import DataLoader, Dataset
-from sentence_transformers import SentenceTransformer
 import os
 import time
+import joblib
+import matplotlib.pyplot as plt
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.neural_network import MLPRegressor
+from sklearn.metrics import mean_squared_error
 
-TRAIN_PATH = 'data/train/train.csv'
-VAL_PATH = 'data/validation/validation.csv'
-MODEL_SAVE_PATH = 'models/trained_model.pth'
-HISTORY_SAVE_PATH = 'results/training_history.csv'
+PROJECT_ROOT = r"C:\FACULTATE\ANUL 3 SEM 1\RN"
+TRAIN_PATH = os.path.join(PROJECT_ROOT, 'data', 'train', 'train.csv')
+VAL_PATH = os.path.join(PROJECT_ROOT, 'data', 'validation', 'validation.csv')
+MODEL_SAVE_PATH = os.path.join(PROJECT_ROOT, 'models', 'trained_model.pkl')
+VECTORIZER_SAVE_PATH = os.path.join(PROJECT_ROOT, 'models', 'vectorizer.pkl')
+GRAPH_SAVE_PATH = os.path.join(PROJECT_ROOT, 'docs', 'loss_curve.png')
 
-BATCH_SIZE = 16
-EPOCHS = 10
-LEARNING_RATE = 2e-4  
+os.makedirs(os.path.join(PROJECT_ROOT, 'models'), exist_ok=True)
+os.makedirs(os.path.join(PROJECT_ROOT, 'docs'), exist_ok=True)
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-print(f"🚀 Antrenarea va rula pe: {device}")
 
-class ASAGDataset(Dataset):
-    """
-    Clasă care transformă CSV-ul în format compatibil PyTorch.
-    Returnează: (Răspuns Student, Răspuns Corect, Notă)
-    """
-    def __init__(self, csv_path):
-        self.data = pd.read_csv(csv_path)[['answer_student', 'answer_correct', 'score_manual']]
-        # Convertim totul la string pentru siguranță și nota la float
-        self.data['answer_student'] = self.data['answer_student'].astype(str)
-        self.data['answer_correct'] = self.data['answer_correct'].astype(str)
-        self.data['score_manual'] = self.data['score_manual'].astype(float)
+def load_data(path):
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Nu gasesc fisierul: {path}")
+    df = pd.read_csv(path)
+    X_text = df['answer_student'].astype(str) + " " + df['answer_correct'].astype(str)
+    y = df['score_manual'].astype(float)
+    return X_text, y
 
-    def __len__(self):
-        return len(self.data)
-
-    def __getitem__(self, idx):
-        row = self.data.iloc[idx]
-        return row['answer_student'], row['answer_correct'], torch.tensor(row['score_manual'], dtype=torch.float32)
-
-class ASAGTransformerModel(nn.Module):
-    """
-    Arhitectura hibridă:
-    1. Sentence Transformer (Embeddings)
-    2. Concatenare vectori
-    3. Strat DENSE (Regresie) pentru nota finala
-    """
-    def __init__(self):
-        super(ASAGTransformerModel, self).__init__()
-        # Încărcăm modelul pre-antrenat SBERT (il inghetam pentru viteza pe CPU)
-        self.encoder = SentenceTransformer('all-MiniLM-L6-v2')
-        self.embedding_dim = 384  
-
-        # Input: 384 (student) + 384 (corect) = 768
-        self.regressor = nn.Sequential(
-            nn.Linear(self.embedding_dim * 2, 256), 
-            nn.ReLU(),
-            nn.Dropout(0.2),                        
-            nn.Linear(256, 64),                    
-            nn.ReLU(),
-            nn.Linear(64, 1)                        
-        )
-
-    def forward(self, student_texts, correct_texts):
-        with torch.no_grad():
-            u = self.encoder.encode(student_texts, convert_to_tensor=True, device=device)
-            v = self.encoder.encode(correct_texts, convert_to_tensor=True, device=device)
-
-        combined_features = torch.cat((u, v), dim=1)
-
-        output = self.regressor(combined_features)
-        
-        return output.squeeze()
-
-def train_epoch(model, dataloader, criterion, optimizer):
-    model.train()
-    total_loss = 0
-    
-    for batch_idx, (stud_text, corr_text, scores) in enumerate(dataloader):
-        scores = scores.to(device)
-        
-        optimizer.zero_grad()
-        
-        predictions = model(list(stud_text), list(corr_text))
-        
-        loss = criterion(predictions, scores)
-        
-        loss.backward()
-        optimizer.step()
-        
-        total_loss += loss.item()
-        
-    return total_loss / len(dataloader)
-
-def evaluate(model, dataloader, criterion):
-    model.eval()
-    total_loss = 0
-    with torch.no_grad():
-        for stud_text, corr_text, scores in dataloader:
-            scores = scores.to(device)
-            predictions = model(list(stud_text), list(corr_text))
-            loss = criterion(predictions, scores)
-            total_loss += loss.item()
-    return total_loss / len(dataloader)
 
 if __name__ == "__main__":
-    print(f"--- Începe Antrenarea ---")
-    
-    # Creare directoare dacă nu există
-    os.makedirs('models', exist_ok=True)
-    os.makedirs('results', exist_ok=True)
+    print("--- ANTRENARE NIVEL 2 (Advanced) ---")
 
-    # Încărcare Date
-    train_dataset = ASAGDataset(TRAIN_PATH)
-    val_dataset = ASAGDataset(VAL_PATH)
-    
-    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE)
-    
-    print(f"Date antrenament: {len(train_dataset)} | Date validare: {len(val_dataset)}")
+    print("1. Incarc datele...")
+    X_train_text, y_train = load_data(TRAIN_PATH)
+    X_val_text, y_val = load_data(VAL_PATH)
 
-    model = ASAGTransformerModel().to(device)
-    
-    criterion = nn.MSELoss() # Mean Squared Error (pentru regresie)
-    optimizer = torch.optim.AdamW(model.parameters(), lr=LEARNING_RATE)
+    print("2. Procesez textul (Vectorizare)...")
+    vectorizer = TfidfVectorizer(max_features=1000)
+    X_train = vectorizer.fit_transform(X_train_text)
+    X_val = vectorizer.transform(X_val_text)
 
-    history = []
+    print("   -> [Nivel 2] Aplic augmentare: Zgomot Gaussian pe datele de antrenare...")
+    noise = np.random.normal(0, 0.01, X_train.shape)  # Zgomot fin
+    X_train_aug = X_train + noise
 
+    print("3. Configurez Reteaua Neuronala cu Scheduler si Early Stopping...")
+    model = MLPRegressor(
+        hidden_layer_sizes=(100, 50),
+        activation='relu',
+
+        solver='sgd',
+        learning_rate='adaptive',
+        learning_rate_init=0.01,
+        momentum=0.9,
+
+        early_stopping=True,
+        n_iter_no_change=5,
+        validation_fraction=0.15,
+
+        max_iter=300,
+        batch_size=32,
+        random_state=42,
+        verbose=True
+    )
+
+    print("4. Start Antrenare...")
     start_time = time.time()
+    model.fit(X_train_aug, y_train)
+    duration = time.time() - start_time
 
-    best_val_loss = float('inf')
-    
-    for epoch in range(EPOCHS):
-        train_loss = train_epoch(model, train_loader, criterion, optimizer)
-        val_loss = evaluate(model, val_loader, criterion)
-        
-        history.append([epoch+1, train_loss, val_loss])
-        
-        print(f"Epoch {epoch+1}/{EPOCHS} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
-        
-        # Salvare cel mai bun model (Checkpoint)
-        if val_loss < best_val_loss:
-            best_val_loss = val_loss
-            torch.save(model.state_dict(), MODEL_SAVE_PATH)
-            # print("  -> Model salvat (performanță îmbunătățită)")
+    print(f"\n Antrenare finalizata in {duration:.2f} secunde!")
+    print(f"   Epoci rulate: {model.n_iter_}")
+    print(f"   Motiv oprire: Early Stopping (dupa {model.n_iter_no_change} epoci fara progres)")
 
-    total_time = time.time() - start_time
-    print(f"\n✅ Antrenare finalizată în {total_time:.2f} secunde.")
-    print(f"Modelul antrenat este salvat în: {MODEL_SAVE_PATH}")
+    joblib.dump(model, MODEL_SAVE_PATH)
+    joblib.dump(vectorizer, VECTORIZER_SAVE_PATH)
 
-    hist_df = pd.DataFrame(history, columns=['epoch', 'train_loss', 'val_loss'])
-    hist_df.to_csv(HISTORY_SAVE_PATH, index=False)
-    print(f"Istoricul antrenării salvat în: {HISTORY_SAVE_PATH}")
+    if hasattr(model, 'loss_curve_'):
+        plt.figure(figsize=(10, 6))
+        plt.plot(model.loss_curve_, label='Training Loss', color='blue')
+        plt.title('Curba de Invatare (Loss vs Epoci)')
+        plt.xlabel('Epoci')
+        plt.ylabel('Loss')
+        plt.legend()
+        plt.grid(True)
+        plt.savefig(GRAPH_SAVE_PATH)
+        print(f" Grafic Loss salvat in: {GRAPH_SAVE_PATH}")
