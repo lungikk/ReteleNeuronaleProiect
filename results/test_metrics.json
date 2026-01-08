@@ -1,1 +1,5 @@
-
+{
+    "test_accuracy": 0.9244,
+    "test_f1_score": 0.9263,
+    "test_mse": 0.0612
+}
