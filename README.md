@@ -71,14 +71,14 @@ Integrare UI: Streamlit incarca modelul antrenat si face predictii reale.
 
 Tabel Hiperparametri si Justificari (OBLIGATORIU - Nivel 1)
 Hiperparametru|Valoare Aleasa|Justificare
-Algoritm|MLPRegressor|"Perceptron Multi-Strat, capabil sa invete relatii non-lineare complexe intre vectorii TF-IDF si note."
-Hidden Layers|"(100, 50)"|"Arhitectura cu 2 straturi ascunse (""Funnel shape"") pentru a comprima si extrage trasaturi semantice din cei 1000 de neuroni de input."
-Learning Rate|Adaptive (Start 0.001)|"Folosit cu solverul SGD. Permite scaderea ratei cand loss-ul stagneaza, asigurand convergenta fina."
+Algoritm|MLPRegressor|Perceptron Multi-Strat, capabil sa invete relatii non-lineare complexe intre vectorii TF-IDF si note.
+Hidden Layers|(100, 50)|Arhitectura cu 2 straturi ascunse (""Funnel shape"") pentru a comprima si extrage trasaturi semantice din cei 1000 de neuroni de input.
+Learning Rate|Adaptive (Start 0.001)|Folosit cu solverul SGD. Permite scaderea ratei cand loss-ul stagneaza, asigurand convergenta fina.
 Batch size|32|Echilibru optim CPU/Memorie pentru N=1050 samples de antrenare. Asigura stabilitatea gradientului.
 Number of epochs|Max 300 (Stop 118)|Early Stopping setat cu patience=5 pentru a preveni overfitting-ul.
-Optimizer (Solver)|SGD|"Stochastic Gradient Descent, necesar pentru functionalitatea de learning_rate='adaptive'."
+Optimizer (Solver)|SGD|Stochastic Gradient Descent, necesar pentru functionalitatea de learning_rate='adaptive'.
 Activation|ReLU|Rectified Linear Unit previne saturatia gradientilor si accelereaza antrenarea pe date sparse.
-Loss function|MSE (Mean Squared Error)|"Fiind o problema de regresie (nota 0.0 - 5.0), MSE penalizeaza erorile mari mai drastic decat MAE."
+Loss function|MSE (Mean Squared Error)|Fiind o problema de regresie (nota 0.0 - 5.0), MSE penalizeaza erorile mari mai drastic decat MAE.
 
 Nivel 2 - Recomandat (85-90% din punctaj)
 Au fost implementate toate optimizarile:
@@ -167,36 +167,55 @@ Human-in-the-loop: Raspunsurile cu scor de incredere la limita (intre 4.0 si 5.0
 Augmentare Sinonime: Generarea automata a mai multor date de antrenare folosind un dictionar de sinonime specific domeniului tehnic.
 
 Structura Repository-ului la Finalul Etapei 5
-proiect-rn-asag/
-├── README.md                  # Acest fisier
-├── docs/
-│   ├── loss_curve.png         # Grafic antrenare (Loss vs Epochs)
-│   ├── confusion_matrix.png   # Matricea de confuzie
-│   └── screenshots/
-│       └── inference_real.png # Demonstratie functionare Web App
+
+proiect-rn-[Lungeanu-Andrei]/
+├── README.md                           # Overview general proiect (actualizat)
+├── etapa3_analiza_date.md         # Din Etapa 3
+├── etapa4_arhitectura_sia.md      # Din Etapa 4
+├── etapa5_antrenare_model.md      # ← ACEST FIȘIER (completat)
 │
-├── data/
-│   ├── train/                 # Dataset antrenare (csv)
-│   ├── validation/            # Dataset validare (csv)
-│   └── test/                  # Dataset testare (csv)
+├── docs/
+│   ├── state_machine.png              # Din Etapa 4
+│   ├── loss_curve.png                 # NOU - Grafic antrenare
+│   ├── confusion_matrix.png           # (opțional - Nivel 3)
+│   └── screenshots/
+│       ├── inference_real.png         # NOU - OBLIGATORIU
+│       └── ui_demo.png                # Din Etapa 4
+│
+├── data/                               # Din Etapa 3-4 (NESCHIMBAT)
+│   ├── raw/
+│   ├── generated/                     # Contribuția voastră 40%
+│   ├── processed/
+│   ├── train/
+│   ├── validation/
+│   └── test/
 │
 ├── src/
-│   ├── preprocessing/
-│   │   └── data_cleaner.py    # Curatare text
+│   ├── data_acquisition/              # Din Etapa 4
+│   ├── preprocessing/                 # Din Etapa 3
+│   │   └── combine_datasets.py        # NOU (dacă ați adăugat date în Etapa 4)
 │   ├── neural_network/
-│   │   ├── train_final.py     # Script antrenare (cu Augmentare & Fixuri)
-│   │   └── evaluate.py        # Script evaluare & analiza erori
+│   │   ├── model.py                   # Din Etapa 4
+│   │   ├── train.py                   # NOU - Script antrenare
+│   │   └── evaluate.py                # NOU - Script evaluare
 │   └── app/
-│       └── web_app.py         # Aplicatie Streamlit
+│       └── main.py                    # ACTUALIZAT - încarcă model antrenat
 │
 ├── models/
-│   ├── trained_model.pkl      # Modelul MLP antrenat
-│   └── vectorizer.pkl         # Vectorizatorul TF-IDF
+│   ├── untrained_model.h5             # Din Etapa 4
+│   ├── trained_model.h5               # NOU - OBLIGATORIU
+│   └── final_model.onnx               # (opțional - Nivel 3 bonus)
 │
-├── results/
-│   └── test_metrics.json      # Rezultate finale (Acc, F1, MSE)
+├── results/                            # NOU - Folder rezultate antrenare
+│   ├── training_history.csv           # OBLIGATORIU - toate epoch-urile
+│   ├── test_metrics.json              # Metrici finale pe test set
+│   └── hyperparameters.yaml           # Hiperparametri folosiți
 │
-└── requirements.txt           # Dependinte (scikit-learn, pandas, streamlit)
+├── config/
+│   └── preprocessing_params.pkl       # Din Etapa 3 (NESCHIMBAT)
+│
+├── requirements.txt                    # Actualizat
+└── .gitignore
 
 Instructiuni de Rulare
 1. Instalare Dependinte
@@ -205,7 +224,7 @@ pip install -r requirements.txt
 2. Antrenare Model (Nivel 2)
 Ruleaza scriptul care aplica augmentarea si antreneaza reteaua:
 python src/neural_network/train_final.py
-# Output: GATA! Antrenare finalizata. Grafic salvat.
+# Output: Antrenare finalizata. Grafic salvat.
 
 3. Evaluare si Analiza (Nivel 3)
 Genereaza metricile si analiza celor 5 erori:
