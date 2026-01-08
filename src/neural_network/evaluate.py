@@ -1,142 +1,102 @@
 import pandas as pd
-import torch
-import torch.nn as nn
-from sentence_transformers import SentenceTransformer
-import matplotlib.pyplot as plt
-from sklearn.metrics import mean_squared_error, mean_absolute_error
-from scipy.stats import pearsonr
 import numpy as np
 import os
+import joblib
 import json
+import matplotlib.pyplot as plt
+from sklearn.metrics import mean_squared_error, f1_score, confusion_matrix, ConfusionMatrixDisplay
 
-TEST_PATH = 'data/test/test.csv'
-MODEL_PATH = 'models/trained_model.pth'
-HISTORY_PATH = 'results/training_history.csv'
-METRICS_SAVE_PATH = 'results/test_metrics.json'
-GRAPH_SAVE_PATH = 'docs/loss_curve.png'
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+TEST_PATH = os.path.join(BASE_DIR, 'data', 'test', 'test.csv')
+MODEL_PATH = os.path.join(BASE_DIR, 'models', 'trained_model.pkl')
+VECTORIZER_PATH = os.path.join(BASE_DIR, 'models', 'vectorizer.pkl')
+METRICS_SAVE_PATH = os.path.join(BASE_DIR, 'results', 'test_metrics.json')
+CONF_MATRIX_PATH = os.path.join(BASE_DIR, 'docs', 'confusion_matrix.png')
 
-class ASAGTransformerModel(nn.Module):
-    def __init__(self):
-        super(ASAGTransformerModel, self).__init__()
-        self.encoder = SentenceTransformer('all-MiniLM-L6-v2')
-        self.embedding_dim = 384
-        
-        self.regressor = nn.Sequential(
-            nn.Linear(self.embedding_dim * 2, 256),
-            nn.ReLU(),
-            nn.Dropout(0.2),
-            nn.Linear(256, 64),
-            nn.ReLU(),
-            nn.Linear(64, 1)
-        )
+os.makedirs(os.path.join(BASE_DIR, 'results'), exist_ok=True)
+os.makedirs(os.path.join(BASE_DIR, 'docs'), exist_ok=True)
 
-    def forward(self, student_texts, correct_texts):
-        with torch.no_grad():
-            u = self.encoder.encode(student_texts, convert_to_tensor=True, device=device)
-            v = self.encoder.encode(correct_texts, convert_to_tensor=True, device=device)
-        combined = torch.cat((u, v), dim=1)
-        output = self.regressor(combined)
-        return output.squeeze()
-
-def plot_learning_curve():
-    if not os.path.exists(HISTORY_PATH):
-        print(" Nu gasesc istoricul antrenarii. Rulati train.py intai.")
-        return
-
-    df = pd.read_csv(HISTORY_PATH)
-    
-    plt.figure(figsize=(10, 6))
-    plt.plot(df['epoch'], df['train_loss'], label='Training Loss', marker='o')
-    plt.plot(df['epoch'], df['val_loss'], label='Validation Loss', marker='o')
-    
-    plt.title('Curba de invatare (Loss Curve)')
-    plt.xlabel('Epoci')
-    plt.ylabel('Loss (MSE)')
-    plt.legend()
-    plt.grid(True)
-    
-    # Salvare în folderul docs
-    os.makedirs('docs', exist_ok=True)
-    plt.savefig(GRAPH_SAVE_PATH)
-    print(f"📈 Graficul Loss a fost salvat în: {GRAPH_SAVE_PATH}")
-    plt.close()
 
 def evaluate_model():
-    print(f"--- Incepe Evaluarea pe Test Set ---")
-    
-    if not os.path.exists(TEST_PATH):
-        print(f"EROARE: Nu gasesc {TEST_PATH}")
+    print("--- EVALUARE MODEL & ANALIZA 5 ERORI ---")
+
+    if not os.path.exists(MODEL_PATH):
+        print(f" EROARE: Nu gasesc modelul la {MODEL_PATH}")
         return
 
-    df_test = pd.read_csv(TEST_PATH)
-    print(f"Date test incarcate: {len(df_test)} inregistrari")
-
-    model = ASAGTransformerModel().to(device)
-    if os.path.exists(MODEL_PATH):
-        model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
-        print(" Model antrenat incarcat cu succes.")
-    else:
-        print("EROARE: Nu gasesc modelul antrenat. Rulati train.py.")
+    print("1. Incarc modelul si datele...")
+    try:
+        model = joblib.load(MODEL_PATH)
+        vectorizer = joblib.load(VECTORIZER_PATH)
+        df_test = pd.read_csv(TEST_PATH)
+    except Exception as e:
+        print(f" Eroare la incarcare: {e}")
         return
 
-    model.eval()
-    
-    predictions = []
-    actuals = []
+    X_text = df_test['answer_student'].astype(str) + " " + df_test['answer_correct'].astype(str)
+    y_true = df_test['score_manual'].astype(float)
 
-    batch_size = 32
-    total_samples = len(df_test)
-    
-    print("Se ruleaza predictiile...")
-    
-    with torch.no_grad():
-        for i in range(0, total_samples, batch_size):
-            batch = df_test.iloc[i:i+batch_size]
-            
-            stud_texts = batch['answer_student'].astype(str).tolist()
-            corr_texts = batch['answer_correct'].astype(str).tolist()
-            scores = batch['score_manual'].astype(float).tolist()
-            
-            preds = model(stud_texts, corr_texts)
-            
-            if preds.ndim == 0:
-                preds = preds.unsqueeze(0)
-                
-            predictions.extend(preds.cpu().numpy())
-            actuals.extend(scores)
+    X_sparse = vectorizer.transform(X_text)
 
-    predictions = np.array(predictions)
-    actuals = np.array(actuals)
-    
-    mse = mean_squared_error(actuals, predictions)
-    
-    mae = mean_absolute_error(actuals, predictions)
-    
-    corr, _ = pearsonr(actuals, predictions)
-    
-    accurate_predictions = np.sum(np.abs(predictions - actuals) <= 0.5)
-    accuracy = accurate_predictions / total_samples
+    X_dense = X_sparse.toarray()
+    X_final = np.array(X_dense, dtype=np.float32)
+
+    print("2. Calculez predictiile...")
+    y_pred_raw = model.predict(X_final)
+
+    possible_grades = np.array([0.0, 2.5, 4.0, 5.0])
+
+    def get_nearest_grade(prediction):
+        idx = (np.abs(possible_grades - prediction)).argmin()
+        return possible_grades[idx]
+
+    y_pred_class = np.array([get_nearest_grade(p) for p in y_pred_raw])
+    y_true_class = np.array([get_nearest_grade(t) for t in y_true])
+
+    acc = np.mean(y_pred_class == y_true_class)
+    f1 = f1_score(y_true_class.astype(str), y_pred_class.astype(str), average='weighted')
+    mse = mean_squared_error(y_true, y_pred_raw)  # MSE pe valorile brute
+
+    print(f"\nREZULTATE FINALE:")
+    print(f"   Acuratete: {acc * 100:.2f}%")
+    print(f"   F1-Score:  {f1:.4f}")
+    print(f"   MSE Loss:  {mse:.4f}")
+
+    cm = confusion_matrix(y_true_class.astype(str), y_pred_class.astype(str), labels=["0.0", "2.5", "4.0", "5.0"])
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=["0.0", "2.5", "4.0", "5.0"])
+
+    plt.figure(figsize=(8, 8))
+    disp.plot(cmap='Blues', values_format='d')
+    plt.title('Matricea de Confuzie')
+    plt.savefig(CONF_MATRIX_PATH)
+    print(f" Confusion Matrix salvata in: {CONF_MATRIX_PATH}")
 
     metrics = {
-        "test_mse": round(mse, 4),
-        "test_mae": round(mae, 4),
-        "pearson_correlation": round(corr, 4),
-        "test_accuracy_tolerance_0.5": round(accuracy, 4) # Asta e metrica pt Nivel 1
+        "test_accuracy": round(acc, 4),
+        "test_f1_score": round(f1, 4),
+        "test_mse": round(mse, 4)
     }
-
-    print("\n REZULTATE FINALE PE TEST:")
-    print(f"   MSE (Eroare pătratică): {mse:.4f}")
-    print(f"   Pearson Correlation:    {corr:.4f} (Țintă > 0.8)")
-    print(f"   Acuratețe (marjă 0.5p): {accuracy*100:.2f}% (Țintă >= 65%)")
-
-    # Salvare metrici JSON
     with open(METRICS_SAVE_PATH, 'w') as f:
         json.dump(metrics, f, indent=4)
-    print(f"Metricile au fost salvate în: {METRICS_SAVE_PATH}")
+
+    print("\n" + "=" * 60)
+    print("TOP 5 CELE MAI MARI GRESELI (ANALIZA PENTRU BONUS)")
+    print("=" * 60)
+
+    df_test['pred_class'] = y_pred_class
+    df_test['diff'] = np.abs(df_test['score_manual'] - df_test['pred_class'])
+
+    worst_mistakes = df_test.sort_values(by='diff', ascending=False).head(5)
+
+    for i, row in worst_mistakes.iterrows():
+        print(f"\n[Exemplu #{i}]")
+        print(f"Intrebare ID: {row.get('question_id', 'N/A')}")
+        print(f"Raspuns Student: '{row['answer_student']}'")
+        print(f"Nota REALA: {row['score_manual']}  |  Nota AI: {row['pred_class']}")
+        print(f"Diferenta: {row['diff']}")
+        print("-" * 30)
+
 
 if __name__ == "__main__":
-    plot_learning_curve()
-    
     evaluate_model()
