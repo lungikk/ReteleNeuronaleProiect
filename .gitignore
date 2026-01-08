@@ -1,0 +1,17 @@
+# Fisiere specifice IDE (PyCharm/VSCode) 
+.idea/
+.vscode/
+*.iml
+
+# Fisiere compilate de Python (Cache)
+__pycache__/
+*.pyc
+
+# Mediul virtual 
+venv/
+env/
+.env
+
+# Fisiere sistem
+.DS_Store
+Thumbs.db
