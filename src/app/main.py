@@ -1,78 +1,51 @@
-import torch
 import os
 import sys
+import joblib
 
-# Adaugam directorul radacina la path pentru importuri corecte
-sys.path.append(os.getcwd())
+PROJECT_ROOT = r"C:\FACULTATE\ANUL 3 SEM 1\RN"
+MODEL_PATH = os.path.join(PROJECT_ROOT, 'models', 'trained_model.pkl')
+VECTORIZER_PATH = os.path.join(PROJECT_ROOT, 'models', 'vectorizer.pkl')
 
-from src.neural_network.model import ASAGTransformerModel
 
-MODEL_PATH = 'models/trained_model.pth'
+def incarca_resurse():
+    if not os.path.exists(MODEL_PATH) or not os.path.exists(VECTORIZER_PATH):
+        print("EROARE: Nu gasesc modelul sau vectorizatorul. Ruleaza train.py!")
+        return None, None
 
-def incarca_model():
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f"Dispozitiv detectat: {device}")
+    print("Se incarca modelul Neural Network ")
+    model = joblib.load(MODEL_PATH)
+    vectorizer = joblib.load(VECTORIZER_PATH)
+    return model, vectorizer
 
-    if not os.path.exists(MODEL_PATH):
-        print(f"EROARE: Nu gasesc fisierul {MODEL_PATH}")
-        print("Ruleaza intai train.py pentru a genera modelul.")
-        return None
-
-    try:
-        model = ASAGTransformerModel()
-        model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
-        model.to(device)
-        model.eval()
-        print("Model antrenat incarcat cu succes.")
-        return model
-    except Exception as e:
-        print(f"Eroare la incarcarea modelului: {e}")
-        return None
 
 def ruleaza_aplicatie():
-    model = incarca_model()
-    if model is None:
-        return
+    model, vectorizer = incarca_resurse()
+    if model is None: return
 
-    print("\n=== SISTEM DE EVALUARE AUTOMATA (ASAG) ===")
-    print("Scrie 'exit' pentru a inchide aplicatia.\n")
+    print("\n=== SISTEM DE NOTARE AUTOMATA ===")
+    print("Scrie 'exit' pentru a iesi.\n")
 
     while True:
         print("-" * 50)
-        
-        barem = input("Introdu Raspunsul Corect (Barem): ").strip()
+        barem = input("Raspuns Corect: ").strip()
         if barem.lower() == 'exit': break
-        if len(barem) < 2:
-            print("Text prea scurt.")
-            continue
 
-        student = input("Introdu Raspunsul Studentului:    ").strip()
+        student = input("Raspuns Student: ").strip()
         if student.lower() == 'exit': break
-        if len(student) < 2:
-            print("Text prea scurt.")
-            continue
 
         try:
-            with torch.no_grad():
-                # Modelul asteapta liste de string-uri
-                score = model([student], [barem])
-                
-                nota_finala = score.item()
-                
-                # Limitare vizuala intre 1 si 5
-                nota_finala = max(1.0, min(5.0, nota_finala))
+            text_combinat = [student + " " + barem]
+            vector_input = vectorizer.transform(text_combinat)
 
-            print(f"\n>>> NOTA PREDICTATA: {nota_finala:.2f} / 5.00")
-            
-            if nota_finala >= 4.5:
-                print("Feedback: Excelent!")
-            elif nota_finala >= 2.5:
-                print("Feedback: Raspuns acceptabil.")
-            else:
-                print("Feedback: Raspuns incorect sau incomplet.")
+            nota = model.predict(vector_input)[0]
+
+            nota = max(1.0, min(5.0, nota))
+
+            print(f"\n>>> NOTA CALCULATA: {nota:.2f}")
 
         except Exception as e:
-            print(f"Eroare la procesare: {e}")
+            print(f"Eroare: {e}")
+
 
 if __name__ == "__main__":
     ruleaza_aplicatie()
