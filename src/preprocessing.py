@@ -1,58 +1,52 @@
 import pandas as pd
 import os
-import re
+from sklearn.model_selection import train_test_split
 
-# --- CONFIGURARE ---
-INPUT_FILE = 'data/raw/asag_simulated_train_data.csv'
-OUTPUT_FILE = 'data/processed/processed.csv'
+PROJECT_ROOT = r"C:\FACULTATE\ANUL 3 SEM 1\RN"
 
-print(">>> Începe verificarea și procesarea datelor...")
+RAW_FILE = os.path.join(PROJECT_ROOT, 'data', 'raw', 'asag_simulated_train_data.csv')
+TRAIN_DIR = os.path.join(PROJECT_ROOT, 'data', 'train')
+VAL_DIR = os.path.join(PROJECT_ROOT, 'data', 'validation')
+TEST_DIR = os.path.join(PROJECT_ROOT, 'data', 'test')
 
-# 1. ÎNCĂRCARE DATE RAW
-if not os.path.exists(INPUT_FILE):
-    print(f"EROARE CRITICĂ: Nu găsesc fișierul {INPUT_FILE}")
-    exit()
+os.makedirs(TRAIN_DIR, exist_ok=True)
+os.makedirs(VAL_DIR, exist_ok=True)
+os.makedirs(TEST_DIR, exist_ok=True)
 
-df = pd.read_csv(INPUT_FILE)
-total_initial = len(df)
-print(f"Intrări total încărcate: {total_initial}")
 
-# 2. VERIFICARE CONFORMITATE (Eliminare Nule/Goale)
-# Verificăm coloanele esențiale: question_text, answer_correct, answer_student
+def proceseaza_date():
+    print(f" Caut fisierul brut la: {RAW_FILE}")
 
-# Pas A: Eliminare valori NaN (Not a Number / Null din Pandas)
-df_clean = df.dropna(subset=['question_text', 'answer_correct', 'answer_student'])
+    if not os.path.exists(RAW_FILE):
+        print(f"\n EROARE: Nu gasesc fisierul!")
+        print(f"Te rog verifica daca ai folderul 'data/raw' si fisierul csv in: {PROJECT_ROOT}")
+        return
 
-# Pas B: Eliminare string-uri goale sau care conțin doar spații
-# Convertim la string, tăiem spațiile (strip) și verificăm dacă lungimea > 0
-mask_valid = (
-    (df_clean['question_text'].astype(str).str.strip().str.len() > 0) &
-    (df_clean['answer_correct'].astype(str).str.strip().str.len() > 0) &
-    (df_clean['answer_student'].astype(str).str.strip().str.len() > 0)
-)
-df_clean = df_clean[mask_valid].copy()
+    print(" Fisier gasit! Incep procesarea...")
+    df = pd.read_csv(RAW_FILE)
 
-rows_removed = total_initial - len(df_clean)
-if rows_removed > 0:
-    print(f"⚠️ ATENȚIE: Au fost eliminate {rows_removed} intrări neconforme (nule sau goale).")
-else:
-    print("✅ Toate datele sunt conforme (nu există valori nule).")
+    print(f"   Total intrari incarcate: {len(df)}")
 
-# 3. PROCESARE TEXT (NLP Cleaning)
-def clean_text(text):
-    text = str(text).lower()                  # Litere mici
-    text = re.sub(r'[^\w\s]', '', text)       # Elimină punctuația
-    text = re.sub(r'\s+', ' ', text).strip()  # Elimină spații duble
-    return text
+    df.dropna(subset=['answer_student', 'answer_correct'], inplace=True)
 
-print("Se aplică curățarea textului (lowercase, punctuatie)...")
-df_clean['question_text_cleaned'] = df_clean['question_text'].apply(clean_text)
-df_clean['answer_correct_cleaned'] = df_clean['answer_correct'].apply(clean_text)
-df_clean['answer_student_cleaned'] = df_clean['answer_student'].apply(clean_text)
+    train_val_df, test_df = train_test_split(
+        df, test_size=0.15, random_state=42, stratify=df['score_manual']
+    )
 
-# 4. SALVARE DATE PROCESATE
-os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)
-df_clean.to_csv(OUTPUT_FILE, index=False)
+    val_size_adjusted = 0.15 / 0.85
+    train_df, val_df = train_test_split(
+        train_val_df, test_size=val_size_adjusted, random_state=42, stratify=train_val_df['score_manual']
+    )
 
-print(f"\n✅ SUCCES! Fișierul procesat a fost salvat în: {OUTPUT_FILE}")
-print(f"Număr final de intrări valide: {len(df_clean)}")
+    train_df.to_csv(os.path.join(TRAIN_DIR, 'train.csv'), index=False)
+    val_df.to_csv(os.path.join(VAL_DIR, 'validation.csv'), index=False)
+    test_df.to_csv(os.path.join(TEST_DIR, 'test.csv'), index=False)
+
+    print("\n Datele au fost impartite:")
+    print(f"   Train: {len(train_df)} randuri -> salvat in data/train")
+    print(f"   Validation: {len(val_df)} randuri -> salvat in data/validation")
+    print(f"   Test: {len(test_df)} randuri -> salvat in data/test")
+
+
+if __name__ == "__main__":
+    proceseaza_date()
