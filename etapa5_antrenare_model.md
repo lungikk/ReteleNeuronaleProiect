@@ -4,7 +4,7 @@
 **Institutie:** POLITEHNICA Bucuresti - FIIR
 **Student:** Lungeanu Andrei-Alexandru
 **Link Repository GitHub:** https://github.com/lungikk/ReteleNeuronaleProiect.git
-**Data predarii:** [08.01.2026]
+**Data predarii:** 08.01.2026
 
 ---
 
@@ -12,7 +12,7 @@
 
 Aceasta etapa corespunde punctului **6. Configurarea si antrenarea modelului RN** din lista de 9 etape.
 
-**Obiectiv principal:** Antrenarea efectiva a modelului RN (MLP Regressor) definit in Etapa 4, evaluarea performantei pe text si integrarea in aplicatia Web Streamlit.
+**Obiectiv principal:** Antrenarea efectiva a modelului RN (MLP Regressor) definit in Etapa 4, evaluarea performantei pe text si integrarea in aplicatia Web Streamlit (cu modul automat de chestionare).
 
 **Pornire obligatorie:** Arhitectura completa si functionala din Etapa 4:
 - State Machine definit (Acquisition -> Preprocessing -> Inference -> Grading)
@@ -47,8 +47,11 @@ python src/preprocessing/feature_engineering.py # Aplicare TF-IDF (1000 features
 python src/preprocessing/data_splitter.py --stratify --random_state 42
 
 Parametri de preprocesare mentinuti:
+
 Vectorizer: TF-IDF (config/vectorizer.pkl) antrenat pe tot corpusul.
+
 Split: 70% train / 15% validation / 15% test.
+
 Random State: 42.
 
 Cerinte Structurate pe 3 Niveluri
@@ -79,7 +82,6 @@ Number of epochs|Max 300 (Stop 118)|Early Stopping setat cu patience=5 pentru a 
 Optimizer (Solver)|SGD|Stochastic Gradient Descent, necesar pentru functionalitatea de learning_rate='adaptive'.
 Activation|ReLU|Rectified Linear Unit previne saturatia gradientilor si accelereaza antrenarea pe date sparse.
 Loss function|MSE (Mean Squared Error)|Fiind o problema de regresie (nota 0.0 - 5.0), MSE penalizeaza erorile mari mai drastic decat MAE.
-
 Nivel 2 - Recomandat (85-90% din punctaj)
 Au fost implementate toate optimizarile:
 
@@ -107,8 +109,8 @@ Nivel 3 - Bonus (pana la 100%)
 1. Comparare Arhitecturi (Benchmark)
 Am antrenat un model clasic (Random Forest) pentru a compara performanta cu RN (MLP).
 Model|Acuratete|F1-Score|Timp Predictie|Concluzie
-MLP (Retea Neuronala)|92.44%|0.9263|~0.002s|Performanta excelenta si viteza superioara
-Random Forest|88.50%|0.8910|~0.015s|Bun, dar fisierul modelului este mare si inferenta mai lenta
+MLP (Retea Neuronala)|92.44%|0.9263|~0.002s|Performanta excelenta si viteza superioara.
+Random Forest|88.50%|0.8910|~0.015s|Bun, dar fisierul modelului este mare si inferenta mai lenta.
 
 Justificare Alegere Finala: Am pastrat MLP deoarece ofera cel mai bun F1-Score (balans precizie/recall) si este extrem de rapid pentru aplicatia Web.
 
@@ -118,11 +120,11 @@ Matricea de confuzie (docs/confusion_matrix.png) si analiza detaliata a celor 5 
 Verificare Consistenta cu State Machine
 Fluxul de date respecta arhitectura definita:
 Stare din Etapa 4|Implementare in Etapa 5
-ACQUIRE_DATA|Input text din Streamlit (Raspuns Student + Barem)
+ACQUIRE_DATA|Input text din Streamlit (Raspuns Student + Barem) SAU citire automata din test.csv
 PREPROCESS|Curatare text + Vectorizare TF-IDF (vectorizer.pkl)
 RN_INFERENCE|Forward pass prin trained_model.pkl -> Output float
-THRESHOLD_CHECK|Rotunjire la grila (0, 2.5, 4.0, 5.0)
-ALERT|Feedback vizual in UI (Baloane pentru 5.0, Warning pentru <2.5)
+THRESHOLD_CHECK|"Rotunjire la grila (0, 2.5, 4.0, 5.0)"
+ALERT|Feedback vizual in UI (Tabel colorat Verde/Galben/Rosu)
 
 In src/app/web_app.py:
 # Modelul este incarcat cu cache pentru performanta
@@ -147,11 +149,11 @@ Sinonime OOV (Out of Vocabulary): Daca studentul foloseste un sinonim care nu a 
 3. Analiza Top 5 Exemple Gresite (Bonus Nivel 3)
 Am extras manual cele mai mari discrepante. Toate urmeaza acelasi tipar: Real 5.0 vs AI 4.0.
 ID|Raspuns Student|Real|AI|Cauza
-Q38|"Long Short-Term Memory, un tip de RNN..."|5.0|4.0|Definitie corecta dar structurata diferit de barem
-Q05|"Transforma orice valoare... intre 0 si 1."|5.0|4.0|Lipsa unor termeni tehnici specifici din barem
-Q09|"ultimul strat care produce predictia finala..."|5.0|4.0|Explicatie valida, dar considerata parafrazare
-Q26|"In Supervised avem etichete..."|5.0|4.0|Similaritate semantica buna, dar nu perfecta lexical
-Q23|"Cand modelul este prea simplu..."|5.0|4.0|Scurtimea raspunsului a afectat scorul TF-IDF
+Q38|"Long Short-Term Memory, un tip de RNN...",5.0|4.0|Definitie corecta dar structurata diferit de barem.
+Q05|"Transforma orice valoare... intre 0 si 1."|5.0|4.0|Lipsa unor termeni tehnici specifici din barem.
+Q09|"ultimul strat care produce predictia finala..."|5.0|4.0|Explicatie valida, dar considerata parafrazare.
+Q26|"In Supervised avem etichete..."|5.0|4.0|Similaritate semantica buna, dar nu perfecta lexical.
+Q23|"Cand modelul este prea simplu..."|5.0|4.0|Scurtimea raspunsului a afectat scorul TF-IDF.
 
 Implicatii Industriale:
 
@@ -167,7 +169,6 @@ Human-in-the-loop: Raspunsurile cu scor de incredere la limita (intre 4.0 si 5.0
 Augmentare Sinonime: Generarea automata a mai multor date de antrenare folosind un dictionar de sinonime specific domeniului tehnic.
 
 Structura Repository-ului la Finalul Etapei 5
-
 proiect-rn-[Lungeanu-Andrei]/
 ├── README.md                           # Overview general proiect (actualizat)
 ├── etapa3_analiza_date.md         # Din Etapa 3
@@ -234,6 +235,7 @@ python src/neural_network/evaluate.py
 4. Lansare Aplicatie Web
 Porneste interfata grafica pentru demonstratie:
 streamlit run src/app/web_app.py
+Navigheaza in sidebar si alege "Mod Chestionar" pentru corectarea automata a 5 intrebari aleatorii.
 
 Checklist Final - Predare
 [x] Prerequisite: State Machine, Dataset Augmentat, Module functionale.
@@ -247,4 +249,6 @@ Checklist Final - Predare
 [x] Tehnic: Structura corecta, cod curat, path-uri relative.
 
 Concluzie: Sistemul ASAG (Automated Short Answer Grading) este functional, robust si gata de utilizare demonstrativa, atingand o acuratete de 92.44% pe setul de testare.
+
+
 
