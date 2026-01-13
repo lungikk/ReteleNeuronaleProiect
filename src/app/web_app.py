@@ -4,17 +4,14 @@ import os
 import numpy as np
 import pandas as pd
 
-# --- CONFIGURARE PAGINA ---
 st.set_page_config(page_title="Sistem Notare Automata", layout="wide")
 
-# --- CAI CATRE FISIERE ---
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 MODEL_PATH = os.path.join(BASE_DIR, 'models', 'trained_model.pkl')
 VECTORIZER_PATH = os.path.join(BASE_DIR, 'models', 'vectorizer.pkl')
 TEST_DATA_PATH = os.path.join(BASE_DIR, 'data', 'test', 'test.csv')
 
 
-# --- INCARCARE MODEL ---
 @st.cache_resource
 def load_resources():
     if not os.path.exists(MODEL_PATH):
@@ -34,7 +31,6 @@ def load_resources():
 model, vectorizer, df_test = load_resources()
 
 
-# --- FUNCTII AUXILIARE ---
 def get_nearest_grade(prediction):
     possible_grades = np.array([0.0, 2.5, 4.0, 5.0])
     idx = (np.abs(possible_grades - prediction)).argmin()
@@ -42,24 +38,19 @@ def get_nearest_grade(prediction):
 
 
 def predict_single(student_text, correct_text):
-    # 1. Procesare
     text_input = str(student_text) + " " + str(correct_text)
-    # 2. Vectorizare
     vector_input = vectorizer.transform([text_input])
-    # 3. Conversie Array (Fix pentru compatibilitate)
     vector_dense = vector_input.toarray()
     vector_final = np.array(vector_dense, dtype=np.float32)
-    # 4. Predictie
     pred_raw = model.predict(vector_final)[0]
     pred_class = get_nearest_grade(pred_raw)
     return pred_class, pred_raw
 
 
-# --- INTERFATA GRAFICA ---
 st.title("🎓 Sistem AI de Notare Automata")
 
 if model is None:
-    st.error("❌ EROARE CRITICA: Nu gasesc modelele (.pkl). Ruleaza train_final.py!")
+    st.error(" EROARE CRITICA: Nu gasesc modelele (.pkl). Ruleaza train_final.py!")
     st.stop()
 
 # --- SIDEBAR ---
@@ -150,9 +141,7 @@ elif app_mode == "Mod Chestionar (Testare Random)":
             res_df = pd.DataFrame(results)
 
 
-            # --- FIX VIZUALIZARE (TEXT NEGRU) ---
             def color_rows(row):
-                # Aici am adaugat 'color: black' pentru a se vedea textul pe fundal colorat
                 if row['Eroare'] == 0:
                     return ['background-color: #d4edda; color: black'] * len(row)  # Verde + Text Negru
                 elif row['Eroare'] <= 1.0:
