@@ -61,11 +61,11 @@ Completați **TOATE** punctele următoare:
 
 #### Tabel Experimente de Optimizare
 Exp#|Modificare fata de Baseline|Accuracy|F1-score|Timp antrenare|Observatii
-Baseline,"MLP (100,), Solver Adam, Fara Augmentare",0.85,0.83,~10 sec,"Model rapid, dar tinde sa faca overfitting pe cuvinte cheie."
-Exp 1,"Modificare Arhitectura: (100, 50)",0.88,0.86,~12 sec,Adaugarea stratului 2 a imbunatatit extractia trasaturilor semantice.
-Exp 2,Schimbare Solver: Adam -> SGD (Adaptive),0.89,0.88,~15 sec,"Convergenta mai stabila, reducerea oscilatiilor pe Loss."
-Exp 3,Batch Size: 32 -> 64,0.87,0.86,~9 sec,"Viteza mai mare, dar acuratete usor scazuta (generalizare mai slaba)."
-Exp 4,Adaugare Augmentare (Zgomot Gaussian),0.92,0.92,~20 sec,BEST. Cea mai buna generalizare prin prevenirea memorarii datelor.
+Baseline|"MLP (100,), Solver Adam, Fara Augmentare"|0.85|0.83|~10 sec|"Model rapid, dar tinde sa faca overfitting pe cuvinte cheie."
+Exp 1|"Modificare Arhitectura: (100, 50)"|0.88|0.86|~12 sec|Adaugarea stratului 2 a imbunatatit extractia trasaturilor semantice.
+Exp 2|Schimbare Solver: Adam -> SGD (Adaptive)|0.89|0.88|~15 sec|"Convergenta mai stabila, reducerea oscilatiilor pe Loss."
+Exp 3|Batch Size: 32 -> 64|0.87|0.86|~9 sec|"Viteza mai mare, dar acuratete usor scazuta (generalizare mai slaba)."
+Exp 4|Adaugare Augmentare (Zgomot Gaussian)|0.92|0.92|~20 sec|BEST. Cea mai buna generalizare prin prevenirea memorarii datelor.
 
 Am ales Exp 4 ca model final pentru ca:
 1. Ofera cel mai bun F1-score (0.9263), critic pentru aplicatia noastra de notare automata unde vrem sa evitam erorile de depunctare incorecta.
@@ -78,13 +78,13 @@ Am ales Exp 4 ca model final pentru ca:
 **CERINȚĂ CENTRALĂ:** Documentați TOATE modificările aduse aplicației software ca urmare a optimizării modelului.
 
 ### Tabel Modificări Aplicație Software
-Componenta,Stare Etapa 5,Modificare Etapa 6,Justificare
-Model incarcat,trained_model.pkl,optimized_model.pkl,"Acuratete 92.44% (+7%), Robustete la sinonime"
-Flux de lucru (State Machine),Liniar (1 input -> 1 output),Ramificat (Manual vs Chestionar),Necesitatea testarii rapide a loturilor de date
-Interfata Utilizator (UI),Doar input text manual,Sidebar Meniu + Generator Automat,Automatizarea procesului de evaluare
-Vizualizare Rezultate,Text simplu,Tabel colorat (Verde/Galben/Rosu),Identificare vizuala rapida a erorilor
-Latenta inferenta,~10ms / raspuns,~2ms / raspuns (optimizat),Procesare eficienta a chestionarelor mari
-Logica Decizie,Rotunjire simpla,Analiza diferentei (Eroare Absoluta),Calculul preciziei la nivel de chestionar
+Componenta|Stare Etapa 5|Modificare Etapa 6|Justificare
+Model incarcat|trained_model.pkl|optimized_model.pkl|"Acuratete 92.44% (+7%), Robustete la sinonime"
+Flux de lucru (State Machine)|Liniar (1 input -> 1 output)|Ramificat (Manual vs Chestionar)|Necesitatea testarii rapide a loturilor de date
+Interfata Utilizator (UI)|Doar input text manual|Sidebar Meniu + Generator Automat|Automatizarea procesului de evaluare
+Vizualizare Rezultate|Text simplu|Tabel colorat (Verde/Galben/Rosu)|Identificare vizuala rapida a erorilor
+Latenta inferenta|~10ms / raspuns|~2ms / raspuns (optimizat)|Procesare eficienta a chestionarelor mari
+Logica Decizie|Rotunjire simpla|Analiza diferentei (Eroare Absoluta)|Calculul preciziei la nivel de chestionar
 
 ### Modificari concrete aduse in Etapa 6:
 
@@ -435,7 +435,7 @@ Dupa primirea feedback-ului de la evaluatori, voi:
 
 ```
 
-## Structura Repository-ului la Finalul Etapei 5
+## Structura Repository-ului la Finalul Etapei 6
 
 **Structură COMPLETĂ și FINALĂ:**
 
@@ -589,5 +589,6 @@ Pre-Predare
 [x] Tag: git tag -a v1.0-final-exam -m "Versiune finala pentru examen"
 
 [x] Push: git push origin main --tags
+
 
 [x] Repository accesibil (public sau privat cu acces profesori)
