@@ -301,7 +301,7 @@ Sinonime OOV (Out of Vocabulary): Daca studentul foloseste un sinonim care nu a 
 3. Analiza Top 5 Exemple Gresite (Bonus Nivel 3)
 Am extras manual cele mai mari discrepante. Toate urmeaza acelasi tipar: Real 5.0 vs AI 4.0.
 ID|Raspuns Student|Real|AI|Cauza
-Q38|"Long Short-Term Memory, un tip de RNN...",5.0|4.0|Definitie corecta dar structurata diferit de barem.
+Q38|"Long Short-Term Memory, un tip de RNN..."|5.0|4.0|Definitie corecta dar structurata diferit de barem.
 Q05|"Transforma orice valoare... intre 0 si 1."|5.0|4.0|Lipsa unor termeni tehnici specifici din barem.
 Q09|"ultimul strat care produce predictia finala..."|5.0|4.0|Explicatie valida, dar considerata parafrazare.
 Q26|"In Supervised avem etichete..."|5.0|4.0|Similaritate semantica buna, dar nu perfecta lexical.
@@ -900,4 +900,5 @@ Pre-Predare
 
 
 [x] Repository accesibil (public sau privat cu acces profesori)
+
 
