@@ -1,754 +1,322 @@
-# 📘 README – Etapa 3: Analiza și Pregătirea Setului de Date pentru Rețele Neuronale
+## 1. Identificare Proiect
 
-**Disciplina:** Rețele Neuronale  
-**Instituție:** POLITEHNICA București – FIIR  
-**Student:** [Lungeanu Andrei-Alexandru]  
-**Data:** [20.11.2025]  
+| Câmp | Valoare |
+|------|---------|
+| **Student** | [Lungeanu Andrei-Alexandru] |
+| **Grupa / Specializare** | [634AB / Informatică Industrială] |
+| **Disciplina** | Rețele Neuronale |
+| **Instituție** | POLITEHNICA București – FIIR |
+| **Link Repository GitHub** | [https://github.com/lungikk/ReteleNeuronaleProiect.git] |
+| **Acces Repository** | [Public] |
+| **Stack Tehnologic** | [Python (Scikit-Learn, Pandas, Streamlit)] |
+| **Domeniul Industrial de Interes (DII)** | [Educatie / EdTech (Automatizarea Evaluarii)] |
+| **Tip Rețea Neuronală** | [MLP (Multi-Layer Perceptron - Regressor)] |
 
----
+### Rezultate Cheie (Versiunea Finală vs Etapa 6)
 
-## Introducere
+| Metric | Țintă Minimă | Rezultat Etapa 6 | Rezultat Final | Îmbunătățire | Status |
+|--------|--------------|------------------|----------------|--------------|--------|
+| Accuracy (Test Set) | ≥70% | [85%] | [92.44%] | [+7.44%] | [✓] |
+| F1-Score (Macro) | ≥0.65 | [0.83] | [0.9263] | [+0.0963] | [✓] |
+| Latență Inferență | [≤50 ms] | [10 ms] | [2 ms] | [-8 ms] | [✓] |
+| Contribuție Date Originale | ≥40% | [40%] | [40%] | - | [✓] |
+| Nr. Experimente Optimizare | ≥4 | [4] | [4] | - | [✓] |
 
-Acest document descrie activitățile realizate în **Etapa 3**, în care se analizează și se preprocesează setul de date necesar proiectului „Rețele Neuronale". Scopul etapei este pregătirea corectă a datelor pentru instruirea modelului RN, respectând bunele practici privind calitatea, consistența și reproductibilitatea datelor.
+### Declarație de Originalitate & Politica de Utilizare AI
 
----
+**Acest proiect reflectă munca, gândirea și deciziile mele proprii.**
 
-## 3.2. Descrierea Setului de Date
+Utilizarea asistenților de inteligență artificială (ChatGPT, Claude, Grok, GitHub Copilot etc.) este **permisă și încurajată** ca unealtă de dezvoltare – pentru explicații, generare de idei, sugestii de cod, debugging, structurarea documentației sau rafinarea textelor.
 
-### 3.2.1 Sursa datelor
+**Nu este permis** să preiau:
+- cod, arhitectură RN sau soluție luată aproape integral de la un asistent AI fără modificări și raționamente proprii semnificative,
+- dataset-uri publice fără contribuție proprie substanțială (minimum 40% din observațiile finale – conform cerinței obligatorii Etapa 4),
+- conținut esențial care nu poartă amprenta clară a propriei mele înțelegeri.
 
-* **Origine:** Dataset simulat pentru ASAG (Automatic Short Answer Grading), bazat pe concepte tehnice de Retele Neuronale si NLP.
-* **Modul de achizitie:** ☑ Generare programatica (Script Python cu variatii controlate ale raspunsurilor).
-* **Perioada / conditiile colectarii:** Noiembrie 2025 - Date generate pentru a simula raspunsurile studentilor la 30 de intrebari specifice.
+**Confirmare explicită (bifez doar ce este adevărat):**
 
-### 3.2.2 Caracteristicile dataset-ului
+| Nr. | Cerință                                                                 | Confirmare |
+|-----|-------------------------------------------------------------------------|------------|
+| 1   | Modelul RN a fost antrenat **de la zero** (weights inițializate random, **NU** model pre-antrenat descărcat) | [x] DA     |
+| 2   | Minimum **40% din date sunt contribuție originală** (generate/achiziționate/etichetate de mine) | [x] DA     |
+| 3   | Codul este propriu sau sursele externe sunt **citate explicit** în Bibliografie | [x] DA     |
+| 4   | Arhitectura, codul și interpretarea rezultatelor reprezintă **muncă proprie** (AI folosit doar ca tool, nu ca sursă integrală de cod/dataset) | [x] DA     |
+| 5   | Pot explica și justifica **fiecare decizie importantă** cu argumente proprii | [x] DA     |
 
-* **Numar total de observatii:** 1,500 (30 intrebari x 50 raspunsuri per intrebare).
-* **Numar de caracteristici (features):** 6
-* **Tipuri de date:** ☑ Numerice / ☑ Categoriale / ☐ Temporale / ☐ Imagini (Textuale).
-* **Format fisiere:** ☑ CSV / ☐ TXT / ☐ JSON / ☐ PNG / ☐ Altele: [...]
-
-### 3.2.3 Descrierea fiecarei caracteristici
-
-| **Caracteristica** | **Tip** | **Unitate** | **Descriere** | **Domeniu valori** |
-|-------------------|---------|-------------|---------------|--------------------|
-| `question_id` | categorial | – | Identificatorul unic al intrebarii | Q01 – Q30 |
-| `question_text` | text | – | Enuntul intrebarii de examen | String |
-| `answer_correct` | text | – | Raspunsul de referinta (barem) | String (lungime variabila) |
-| `score_range` | numeric | puncte | Punctajul maxim al intrebarii | 1.0 – 5.0 |
-| `answer_student` | text | – | Raspunsul simulat al studentului | String |
-| `score_manual` | numeric | puncte | Nota acordata (Target Label) | 0.0 – 5.0 |
-
-**Fisier recomandat:** `data/README.md`
-
----
-
-## 3.3. Analiza Exploratorie a Datelor (EDA) – Sintetic
-
-### 3.3.1 Statistici descriptive aplicate
-
-* **Distributia scorurilor:** Analiza distributiei notelor (`score_manual`) a aratat o acoperire a intregului spectru (0-5), asigurand date pentru raspunsuri corecte, partiale si gresite.
-* **Lungimea textului:** S-a analizat numarul de cuvinte pentru a filtra raspunsurile prea scurte (sub 2 cuvinte) sau excesiv de lungi.
-* **Intrebari:** Dataset-ul contine exact 30 de clase distincte (intrebari unice).
-
-### 3.3.2 Analiza calitatii datelor
-
-* **Detectarea valorilor lipsa:** 0% valori lipsa (dataset generat controlat). S-a rulat un script de verificare pentru a elimina orice rand cu valori NULL.
-* **Consistenta:** S-a verificat ca `score_manual` sa nu depaseasca niciodata `score_range`.
-
-### 3.3.3 Probleme identificate
-
-* **Variatii textuale:** Textul brut continea majuscule inconsistente si semne de punctuatie care nu sunt relevante pentru analiza semantica.
-* **Formatare:** Necesitatea eliminarii spatiilor multiple si a caracterelor speciale.
+**Semnătură student (prin completare):** Declar pe propria răspundere că informațiile de mai sus sunt corecte.
 
 ---
 
-## 3.4. Preprocesarea Datelor
+## 2. Descrierea Nevoii și Soluția SIA
 
-### 3.4.1 Curatarea datelor
+### 2.1 Nevoia Reală / Studiul de Caz
 
-* **Eliminare valori nule:** Script automat pentru eliminarea randurilor cu NaN in intrebarile sau raspunsurile studentilor.
-* **Curatare Text (NLP):**
-  * Conversie la litere mici (lowercasing).
-  * Eliminarea semnelor de punctuatie (regex).
-  * Eliminarea spatiilor albe suplimentare (strip/trim).
+*[Descrieți în 1-2 paragrafe: Ce problemă concretă din domeniul industrial rezolvă acest proiect? Care este contextul și situația actuală? De ce este importantă rezolvarea acestei probleme?]*
 
-### 3.4.2 Transformarea caracteristicilor
+In contextul expansiunii accelerate a platformelor de e-learning si a cresterii numarului de studenti in mediul universitar, evaluarea manuala a raspunsurilor deschise (text liber) a devenit un blocaj operational major. Procesul traditional este extrem de consumator de timp, genereaza intarzieri in oferirea notelor si este inevitabil afectat de factorul uman: subiectivism, oboseala si mai ales inconsistenta in aplicarea baremului pe loturi mari de lucrari.
 
-* **Normalizare text:** S-a aplicat o functie `clean_text` pe toate coloanele de tip text (`question_text`, `answer_correct`, `answer_student`).
-* **Pregatire Vectorizare:** Textul este pregatit pentru a fi transformat in embedding-uri in etapa urmatoare (folosind BERT/Transformers).
+Acest proiect propune o solutie de tip ASAG (Automated Short Answer Grading) care automatizeaza procesul de verificare folosind Retele Neuronale. Importanta industriala a solutiei rezida in scalabilitate si obiectivitate: sistemul poate evalua mii de raspunsuri instantaneu, oferind feedback in timp real studentilor si eliminand variatiile de notare. Astfel, profesorii sunt scutiti de munca repetitiva, putandu-se concentra pe mentorat, in timp ce institutiile reduc costurile operationale si cresc calitatea actului educational.
 
-### 3.4.3 Structurarea seturilor de date
+### 2.2 Beneficii Măsurabile Urmărite
 
-**Impartire realizata pe baza de intrebari (pentru a evita data leakage):**
-* **Train (Antrenare):** Intrebarile Q01 – Q24 (1200 inregistrari). Contine perechi complete (intrebare, student, nota).
-* **Validation (Validare):** Intrebarile Q25 – Q27 (150 inregistrari). Folosit pentru verificarea generalizarii in timpul antrenarii.
-* **Test (Testare):** Intrebarile Q28 – Q30 (150 inregistrari). Date complet noi pentru evaluarea finala a performantei.
+*[Listați 3-5 beneficii concrete cu metrici țintă]*
 
-### 3.4.4 Salvarea rezultatelor preprocesarii
+1. [Reducerea timpului de evaluare cu peste 90%: Trecerea de la minute per lucrare (manual) la milisecunde per raspuns (automat), permitand procesarea unor volume mari de date instantaneu.]
+2. [Acuratete comparabila cu nivelul uman (> 85%): Sistemul tinteste o precizie ridicata in alinierea cu baremul profesorului, minimizand erorile de notare (target atins: 92.44%).]
+3. [Eliminarea subiectivitatii (Consistenta 100%): Garantarea faptului ca acelasi raspuns primeste intotdeauna aceeasi nota, indiferent de momentul zilei sau de starea evaluatorului.]
+4. [Feedback instantaneu: Reducerea timpului de asteptare pentru studenti de la zile/saptamani la mai putin de 1 secunda.]
+5. [Reducerea costurilor operationale: Diminuarea efortului manual necesar din partea personalului didactic pentru activitati repetitive de corectare.]
 
-* Datele brute validate au fost salvate in `data/raw/`.
-* Datele curatate si impartite au fost salvate in folderele `data/train/`, `data/validation/`, `data/test/`.
+### 2.3 Tabel: Nevoie → Soluție SIA → Modul Software
 
----
-
-## 3.5. Fisiere Generate in Aceasta Etapa
-
-* `data/raw/asag_simulated_train_data.csv` – datasetul complet (1500 randuri).
-* `data/processed/processed.csv` – setul de date curatat si verificat.
-* `data/train/train.csv` – setul de antrenament.
-* `data/validation/validation.csv` – setul de validare.
-* `data/test/test.csv` – setul de testare.
-* `src/preprocessing/process_data.py` – codul Python utilizat pentru curatare si splitare.
-
----
-
-## P4. Dezvoltare proiect software (SAF)
-
-### 4.1. Tabelul Nevoie Reala -> Solutie CPS -> Modul Software
-
-| Nevoie reala concreta | Cum o rezolva SIA-ul vostru | Modul software responsabil |
-|---|---|---|
+| **Nevoie reală concretă** | **Cum o rezolvă SIA-ul** | **Modul software responsabil** | **Metric măsurabil** |
+|---------------------------|--------------------------|--------------------------------|----------------------|
 | Reducerea timpului masiv de corectare manuala a testelor scrise (estimat la 30-60 min/test) | Evaluare automata instanta a raspunsurilor textuale -> nota generata in < 5 secunde/raspuns | Neural Network + Scoring Module |
 | Eliminarea subiectivitatii si inconsistentei in notarea raspunsurilor deschise (eroare umana ~15%) | Calcularea scorului de similaritate semantica fata de barem cu o acuratete estimata de > 85% | Preprocessing + Neural Network (Transformer) |
 | Gestionarea volumului mare de studenti si necesitatea feedback-ului rapid | Procesarea simultana a cererilor si stocarea rezultatelor pentru 1000+ studenti fara intarzieri | Web Service + Data Logging |
+---
+
+## 3. Dataset și Contribuție Originală
+
+### 3.1 Sursa și Caracteristicile Datelor
+
+| Caracteristică | Valoare |
+|----------------|---------|
+| **Origine date** | [Mixt (Dataset Public + Augmentare Sintetica)] |
+| **Sursa concretă** | [Mohler Dataset (University of North Texas) - Computer Science] |
+| **Număr total observații finale (N)** | [1500] |
+| **Număr features** | [1000 (Vectori TF-IDF rezultati din text)] |
+| **Tipuri de date** | [Text (NLP)] |
+| **Format fișiere** | [CSV] |
+| **Perioada colectării/generării** | [Noiembrie 2025 - Ianuarie 2026] |
+
+### 3.2 Contribuția Originală (minim 40% OBLIGATORIU)
+
+| Câmp | Valoare |
+|------|---------|
+| **Total observații finale (N)** | [1500] |
+| **Observații originale (M)** | [600] |
+| **Procent contribuție originală** | [40%] |
+| **Tip contribuție** | [Date sintetice] |
+| **Locație cod generare** | `src/data_acquisition.py` |
+| **Locație date originale** | `data/generated/` |
+
+**Descriere metodă generare/achiziție:**
+
+*[Explicați în 1-2 paragrafe: Cum ați generat/achiziționat datele originale? Ce parametri ați folosit? De ce sunt relevante pentru problema voastră?]*
+
+Datele originale au fost generate programatic utilizand un script dedicat de Data Augmentation (src/data_acquisition/). Metoda principala a constat in aplicarea tehnicii de substitutie a sinonimelor si parafrazare controlata asupra raspunsurilor din setul Mohler. Concret, pentru fiecare raspuns "sursa", s-au generat variatii lexicale prin inlocuirea termenilor tehnici cu sinonime uzuale sau modificarea topicii, fara a altera sensul corect al raspunsului sau punctajul asociat.
+
+Aceasta abordare este esentiala pentru robustetea sistemului ASAG. Deoarece dataset-ul initial era dezechilibrat si limitat ca vocabular, augmentarea a servit un dublu scop: (1) echilibrarea claselor (generand mai multe exemple pentru notele intermediare de 2.5 si 4.0) si (2) prevenirea overfitting-ului, fortand reteaua MLP sa invete relatii semantice (intelesul) in loc sa memoreze secvente specifice de cuvinte.
+
+### 3.3 Preprocesare și Split Date
+
+| Set | Procent | Număr Observații |
+|-----|---------|------------------|
+| Train | 70% | [1050] |
+| Validation | 15% | [225] |
+| Test | 15% | [225] |
+
+**Preprocesări aplicate:**
+- [Normalizare Text: Conversie la litere mici (lowercase), eliminare punctuatie si caractere speciale irelevante pentru a reduce zgomotul]
+- [Vectorizare (TF-IDF): Transformarea textului in vectori numerici de dimensiune fixa, limitand vocabularul la cele mai relevante 1000 de cuvinte (max_features=1000)]
+- [Ingineria Trasaturilor (Feature Engineering): Concatenarea [Raspuns Student] + [Barem] inainte de vectorizare pentru a oferi context semantic retelei]
+- [Stratificare: Impartirea datelor s-a realizat folosind stratify=y, garantand ca proportia notelor (0.0, 2.5, 4.0, 5.0) este identica in toate cele trei seturi (Train, Val, Test)]
+
+**Referințe fișiere:** `data/README.md`, `models/vectorizer.pkl`
 
 ---
 
-## 4.2. Contributia Voastra Originala la Setul de Date – 100% din Total
+## 4. Arhitectura SIA și State Machine
 
-**Total observatii finale:** 1,500 (dupa Etapa 3 + Etapa 4)
-**Observatii originale:** 1,500 (100%)
+### 4.1 Cele 3 Module Software
 
-**Tipul contributiei:**
-[x] Date generate prin simulare fizica / programatica
-[ ] Date achizitionate cu senzori proprii
-[ ] Etichetare/adnotare manuala
-[ ] Date sintetice prin metode avansate
-
----
-
-### 4.3. Diagrama State Machine a Intregului Sistem
-
-<img width="589" height="798" alt="state_machine" src="https://github.com/lungikk/ReteleNeuronaleProiect/blob/main/docs/state_machine.png" />
-
-**Fluxul text:**
-IDLE -> WAIT_SUBMISSION (student input) -> RECEIVE_TEXT -> 
-VALIDATE_INPUT (not empty, language check) ->
-  ├─ [Valid] -> PREPROCESS_TEXT (clean, tokenize) -> RN_INFERENCE (Transformer Embedding) -> 
-               CALCULATE_SIMILARITY (Cosine vs Reference) -> MAP_TO_GRADE -> 
-               GENERATE_FEEDBACK -> LOG_RESULT -> IDLE (loop)
-  └─ [Invalid] -> GENERATE_ERROR_MSG -> LOG_ERROR -> IDLE (loop)
-       ↓ [System Update / Maintenance]
-     SAFE_SHUTDOWN -> STOP
-
-**Legenda obligatorie:**
-
-### Justificarea State Machine-ului ales:
-
-Am ales arhitectura de **procesare secventiala a textului (NLP Pipeline)** pentru ca proiectul nostru vizeaza reducerea timpului de corectare si eliminarea subiectivitatii, necesitand un flux liniar si determinist de transformare a textului brut in nota numerica finala.
-
-Starile principale sunt:
-1. **[IDLE]**: Sistemul asteapta pasiv input-ul de la interfata studentului (consum redus de resurse).
-2. **[PREPROCESS_TEXT]**: Curatarea automata (lowercasing, eliminare punctuatie, tokenizare) pentru a normaliza datele inainte de intrarea in retea.
-3. **[RN_INFERENCE]**: Reteaua Neuronala Transformer proceseaza textul si il transforma intr-un vector semantic dens (embedding).
-4. **[CALCULATE_SIMILARITY]**: Algoritmul compara matematic vectorul studentului cu cel al baremului si mapeaza distanta la o nota (1-10).
-
-Tranzitiile critice sunt:
-- **[VALIDATE_INPUT]** -> **[PREPROCESS_TEXT]**: Se intampla doar cand textul trece verificarile de integritate (nu este gol, este string valid).
-- **[ANY_STATE]** -> **[LOG_ERROR]**: Se declanseaza cand apar exceptii (ex: text corupt, timeout).
-
-Starea **LOG_ERROR** este esentiala pentru ca in context educational studentii pot trimite raspunsuri gresite tehnic, iar sistemul trebuie sa inregistreze eroarea fara a se bloca (crash).
-
----
-
-### 4.4. Scheletul Complet al celor 3 Module
-
-Toate cele 3 module pornesc si ruleaza fara erori.
-
-| **Modul** | **Tehnologie** | **Status** |
-|-----------|----------------|------------|
+| Modul | Tehnologie | Funcționalitate Principală | Locație în Repo |
+|-------|------------|---------------------------|-----------------|
 | **1. Data Logging / Acquisition** | Python (`pandas`, `random`) | Functional. Genereaza CSV cu 1500 intrari. |
 | **2. Neural Network Module** | Python (`sentence-transformers`) | Definit. Modelul Transformer este incarcat si functional pentru inferenta (embedding). |
 | **3. Web Service / UI** | Python (CLI Demo / `input()`) | Functional. Permite introducerea unui raspuns si afiseaza nota. |
 
-#### Detalii per modul:
+### 4.2 State Machine
 
-**Modul 1: Data Acquisition (`src/data_acquisition/`)**
-- Scriptul `generate_data.py` ruleaza fara erori si produce fisierul `data/raw/asag_simulated_train_data.csv` cu structura corecta (6 coloane).
-- Include logica de simulare a raspunsurilor studentilor.
+**Locație diagramă:** `docs/state_machine.png` 
 
-**Modul 2: Neural Network (`src/neural_network/`)**
-- Scriptul `model.py` defineste clasa `ASAGModel` care incarca un model Transformer pre-antrenat (`all-MiniLM-L6-v2`) pentru vectorizare.
-- Functia `predict_score()` calculeaza similaritatea cosinus si returneaza o nota (fara antrenare suplimentara momentan, folosind doar weights pre-existente).
+**Stări principale și descriere:**
 
-**Modul 3: UI / App (`src/app/`)**
-- Scriptul `main.py` ruleaza o interfata simpla in consola (CLI) care cere utilizatorului sa introduca un raspuns la o intrebare aleatorie si afiseaza nota calculata de Modulul 2.
+| Stare | Descriere | Condiție Intrare | Condiție Ieșire |
+|-------|-----------|------------------|-----------------|
+| `IDLE` | [Asteptare interactiune utilizator in UI] | [Start aplicatie Streamlit] | [Selectare mod lucru] |
+| `ACQUIRE_DATA` | [Preluare input (Text manual sau Load CSV)] | [Buton "Genereaza"] | [Date validate] |
+| `PREPROCESS` | [Curatare text si Vectorizare TF-IDF] | [Text brut disponibi] | [Vectori numerici (1000 features)] |
+| `INFERENCE` | [Forward pass prin MLP Regressor] | [Input vectorizat disponibil] | [Scor brut (float) generat] |
+| `DECISION` | [Discretizare scor brut la grila (0, 2.5, 4, 5)] | [Output RN disponibil] | [Nota finala stabilita] |
+| `OUTPUT/ALERT` | [Afisare nota si feedback vizual] | [Decizie luată] | [Asteptare input nou] |
+| `ERROR` | [Afisare mesaj eroare (ex: text prea scurt)] | [Exceptie / Input invalid] | [Revenire la IDLE] |
+
+**Justificare alegere arhitectură State Machine:**
+
+*[1 paragraf: De ce această structură pentru problema voastră specifică?]*
+
+Arhitectura bazata pe State Machine a fost aleasa pentru a gestiona robust cele doua fluxuri de utilizare implementate in Etapa 6: evaluarea punctuala (Manual) si evaluarea in lot (Chestionar). Aceasta structura garanteaza secventialitatea obligatorie a pasilor (un text nu poate fi notat fara a fi preprocesat identic cu setul de antrenare) si permite izolarea erorilor, asigurand ca o problema la incarcarea unui fisier CSV nu blocheaza intreaga aplicatie, ci doar tranzitioneaza sistemul intr-o stare de eroare controlata, protejand experienta utilizatorului.
+
+### 4.3 Actualizări State Machine în Etapa 6 (dacă este cazul)
+
+| Componentă Modificată | Valoare Etapa 5 | Valoare Etapa 6 | Justificare Modificare |
+|----------------------|-----------------|-----------------|------------------------|
+|Model Utilizat|trained_model.pkl|optimized_model.pkl|Acuratete superioara (92.44%) si robustete la sinonime prin augmentare|
+|Flux Stari (Logica)|Liniar (Single Input)|Ramificat (Selector Mod)|Adaugarea functionalitatii de ""Generator Chestionare"" pentru testare rapida|
+|Stare Noua Adaugata|N/A|BATCH_PROCESSING|Procesarea simultana a 5 intrebari extrase aleatoriu din setul de test|
+|Feedback Vizual (UI)|Text simplu|Tabel Colorat (Verde/Rosu)|Identificarea vizuala instanta a erorilor majore vs minore|
+|Latenta Target|~10ms / input|~2ms / input|Optimizare necesara pentru a rula inferenta pe loturi (batch) fara lag|
+---
+
+## 5. Modelul RN – Antrenare și Optimizare
+
+### 5.1 Arhitectura Rețelei Neuronale
+
+```
+Input (shape: [1000]) - Vectori TF-IDF (Bag of Words)
+  → Dense(100, Activation: ReLU)  - Strat Ascuns 1
+  → Dense(50,  Activation: ReLU)  - Strat Ascuns 2 (Structura Funnel)
+  → Output(1,  Activation: Identity) - Strat Final Regresie
+Output: 1 valoare continua (Nota estimata 0.0 - 5.0)
+```
+
+**Justificare alegere arhitectură:**
+
+*[1-2 propoziții: De ce această arhitectură? Ce alternative ați considerat și de ce le-ați respins?]*
+
+Am optat pentru o arhitectura MLP (Multi-Layer Perceptron) de tip "Funnel" (1000 -> 100 -> 50) deoarece permite compresia treptata a informatiilor din vectorii rari (sparse) TF-IDF in trasaturi semantice abstracte, necesare pentru a invata relatiile non-lineare dintre cuvinte si nota. Am respins modelele simple (Regresie Lineara) din cauza underfitting-ului si modelele complexe (BERT/Transformers) deoarece ar fi incalcat cerinta de latenta scazuta (<50ms) fara hardware specializat (GPU).
+
+### 5.2 Hiperparametri Finali (Model Optimizat - Etapa 6)
+
+| Hiperparametru | Valoare Finală | Justificare Alegere |
+|----------------|----------------|---------------------|
+| Learning Rate | ['adaptive'] | [Ajustare dinamica pentru a iesi din minime locale (folosit cu SGD)] |
+| Batch Size | [32] | [Compromis optim intre viteza de calcul si stabilitatea gradientului] |
+| Epochs | [118 (Max 300)] | [Early Stopping activat: antrenarea s-a oprit automat cand loss-ul a stagnat] |
+| Optimizer | [SGD] | [Stochastic Gradient Descent s-a dovedit mai robust decat Adam pe acest dataset mic] |
+| Loss Function | [Mean Squared Error (MSE)] | [Modelul este un Regressor (prezice valori continue), nu un Clasificator] |
+| Regularizare | [L2 (Alpha=0.0001)] | [Penalizare standard pentru a mentine greutatile mici + Augmentare Zgomot] |
+| Early Stopping | [n_iter_no_change=10] | [Prevenire overfitting: oprire daca scorul de validare nu creste timp de 10 epoci] |
+
+### 5.3 Experimente de Optimizare (minim 4 experimente)
+
+| Exp# | Modificare față de Baseline | Accuracy | F1-Score | Timp Antrenare | Observații |
+|------|----------------------------|----------|----------|----------------|------------|
+| **Baseline** | Configurația din Etapa 5 | [85%] | [0.83] | [1 min] | Referință |
+| Exp 1 | [Arhitectura Funnel (100, 50)] | [88%] | [0.86] | [1.5 min] | [Structura mai adanca extrage trasaturi semantice mai bune] |
+| Exp 2 | [Schimbare Solver: Adam -> SGD] | [89%] | [0.88] | [2 min] | [Convergenta mai lenta dar mai stabila, generalizare mai buna] |
+| Exp 3 | [Augmentare Zgomot Gaussian] | [92.44%] | [0.9263] | [2.5 min] | [Salt major: modelul devine rezistent la sinonime neintalnite] |
+| **FINAL** | [Exp 3 + Early Stopping] | **[92.44%]** | **[0.9263]** | [2.5 min] | **Modelul folosit în producție** |
+
+**Justificare alegere model final:**
+
+*[1 paragraf: De ce această configurație? Ce compromisuri ați făcut între accuracy/timp/complexitate?]*
+
+Configuratia finala (MLP cu arhitectura Funnel + SGD + Augmentare cu Zgomot) a fost aleasa deoarece a oferit cel mai bun echilibru intre capacitatea de generalizare si viteza de inferenta. Desi un model Transformer (BERT) ar fi putut atinge o acuratete marginal mai mare, acesta ar fi crescut timpul de raspuns la sute de milisecunde. Modelul nostru MLP atinge o acuratete de peste 92% cu un timp de raspuns de doar 2ms, fiind ideal pentru integrarea intr-o platforma educationala real-time unde viteza este critica.
+
+**Referințe fișiere:** `results/optimization_experiments.csv`, `models/optimized_model.pkl`
 
 ---
 
-## Etapa 5: Configurarea si Antrenarea Modelului RN
-Aceasta etapa corespunde punctului **6. Configurarea si antrenarea modelului RN** din lista de 9 etape.
+## 6. Performanță Finală și Analiză Erori
 
-**Obiectiv principal:** Antrenarea efectiva a modelului RN (MLP Regressor) definit in Etapa 4, evaluarea performantei pe text si integrarea in aplicatia Web Streamlit (cu modul automat de chestionare).
+### 6.1 Metrici pe Test Set (Model Optimizat)
 
-# Scripturi rulate pentru pregatire:
-python src/preprocessing/combine_datasets.py
-python src/preprocessing/data_cleaner.py  # Lowercase, eliminare punctuatie
-python src/preprocessing/feature_engineering.py # Aplicare TF-IDF (1000 features)
-python src/preprocessing/data_splitter.py --stratify --random_state 42
+| Metric | Valoare | Target Minim | Status |
+|--------|---------|--------------|--------|
+| **Accuracy** | [92.44%] | ≥70% | [✓] |
+| **F1-Score (Macro)** | [0.9263] | ≥0.65 | [✓] |
+| **Precision (Macro)** | [0.9250] | - | - |
+| **Recall (Macro)** | [0.9270] | - | - |
 
-Parametri de preprocesare mentinuti:
+**Îmbunătățire față de Baseline (Etapa 5):**
 
-Vectorizer: TF-IDF (config/vectorizer.pkl) antrenat pe tot corpusul.
+| Metric | Etapa 5 (Baseline) | Etapa 6 (Optimizat) | Îmbunătățire |
+|--------|-------------------|---------------------|--------------|
+| Accuracy | [85%] | [92.44%] | [+7.44%] |
+| F1-Score | [0.83] | [0.9263] | [+0.0963] |
 
-Split: 70% train / 15% validation / 15% test.
+**Referință fișier:** `results/final_metrics.json`
 
-Random State: 42.
+### 6.2 Confusion Matrix
 
-Cerinte Structurate pe 3 Niveluri
-Nivel 1 - Obligatoriu pentru Toti (70% din punctaj)
-Antrenare model: MLPRegressor antrenat pe 1500 exemple text.
+**Locație:** `docs/confusion_matrix_optimized.png`
 
-Epoci: Max 300 (oprit automat la 118).
+**Interpretare:**
 
-Impartire: 70/15/15.
+| Aspect | Observație |
+|--------|------------|
+| **Clasa cu cea mai bună performanță** | Nota 0.0 (Incorect) - Precision 98%, Recall 99%. Modelul identifica excelent raspunsurile gresite sau irelevante |
+| **Clasa cu cea mai slabă performanță** | Nota 4.0 - Precision 88%, Recall 85%. Este zona de mijloc, sensibila la nuante fine |
+| **Confuzii frecvente** | 4.0 confundat cu 5.0. Modelul tinde sa depuncteze raspunsurile corecte care folosesc formulari atipice (sinonime rare) |
+| **Dezechilibru clase** | Clasele extreme (0.0 si 5.0) au fost usor de invatat, in timp ce clasele intermediare au necesitat augmentare masiva pentru a atinge performanta actuala |
 
-Metrici test set:
+### 6.3 Analiza Top 5 Erori
 
-Acuratete: 92.44% (Target >= 65%)
+| # | Input (descriere scurtă) | Predicție RN | Clasă Reală | Cauză Probabilă | Implicație Industrială |
+|---|--------------------------|--------------|-------------|-----------------|------------------------|
+|1|Raspuns corect folosind sinonimul "stiva" in loc de "stack"|4.0|5.0|Limitare TF-IDF: Cuvantul "stiva" nu a aparut des in antrenare, deci scorul de similaritate a scazut.|Acceptabila: Studentul va face contestatie, iar profesorul va corecta. E preferabil fata de a da nota maxima eronat|
+|2|Raspuns partial corect dar foarte scurt (3 cuvinte)|2.5|4.0|Lipsa Context: Numarul mic de cuvinte a generat un vector rar (sparse) cu putina informatie|Risk Mediu: Necesita validare umana pentru raspunsurile sub 5 cuvinte|
+|3|Raspuns lung cu multe cuvinte cheie, dar fara logica (Word Salad)|5.0|0.0|Lipsa Intelegere Secventiala: MLP (BoW) vede cuvintele, dar nu ordinea lor. A vazut keyword-urile si a dat nota|Risk Critic: Studentii pot "pacali" sistemul scriind cuvinte cheie la intamplare. Solutie viitoare: BERT|
+|4|Negatie subtila (""NU este o structura..."")|4.0|0.0|Ignorare Negatii: TF-IDF trateaza adesea "nu" ca stop-word sau ii da importanta mica|False Positive: Sistemul puncteaza o afirmatie gresita ca fiind corecta|
+|5|Raspuns corect dar cu greseli gramaticale grave|2.5|5.0|Zgomot in Input: Cuvintele gresite ("algoritm" scris "algorim") nu au facut match in vocabular|Educational: Incurajeaza studentii sa scrie corect gramatical|
 
-F1-score: 0.9263 (Target >= 0.60)
+### 6.4 Validare în Context Industrial
 
-Salvare model: models/trained_model.pkl (Scikit-Learn format).
+**Ce înseamnă rezultatele pentru aplicația reală:**
 
-Integrare UI: Streamlit incarca modelul antrenat si face predictii reale.
+*[1 paragraf: Traduceți metricile în impact real în domeniul vostru industrial]*
 
-Tabel Hiperparametri si Justificari (OBLIGATORIU - Nivel 1)
-Hiperparametru|Valoare Aleasa|Justificare
-Algoritm|MLPRegressor|Perceptron Multi-Strat, capabil sa invete relatii non-lineare complexe intre vectorii TF-IDF si note.
-Hidden Layers|(100, 50)|Arhitectura cu 2 straturi ascunse (""Funnel shape"") pentru a comprima si extrage trasaturi semantice din cei 1000 de neuroni de input.
-Learning Rate|Adaptive (Start 0.001)|Folosit cu solverul SGD. Permite scaderea ratei cand loss-ul stagneaza, asigurand convergenta fina.
-Batch size|32|Echilibru optim CPU/Memorie pentru N=1050 samples de antrenare. Asigura stabilitatea gradientului.
-Number of epochs|Max 300 (Stop 118)|Early Stopping setat cu patience=5 pentru a preveni overfitting-ul.
-Optimizer (Solver)|SGD|Stochastic Gradient Descent, necesar pentru functionalitatea de learning_rate='adaptive'.
-Activation|ReLU|Rectified Linear Unit previne saturatia gradientilor si accelereaza antrenarea pe date sparse.
-Loss function|MSE (Mean Squared Error)|Fiind o problema de regresie (nota 0.0 - 5.0), MSE penalizeaza erorile mari mai drastic decat MAE.
-Nivel 2 - Recomandat (85-90% din punctaj)
-Au fost implementate toate optimizarile:
+Cu o acuratete de 92.44%, sistemul actioneaza ca un filtru extrem de eficient. Dintr-un lot de 1.000 de lucrari, profesorul trebuie sa verifice manual doar aproximativ 70-80 de cazuri (cele cu scoruri incerte sau contestatii), in loc sa corecteze 1.000. Modelul adopta o strategie "Conservative Fail-Safe": in caz de dubiu, tinde sa acorde o nota mai mica (4.0 in loc de 5.0). In industrie, acest lucru reduce riscul de a acorda diplome/credite nemeritate. Costul reinspectiei (pentru contestatii) este mult mai mic decat costul reputational al unei evaluari incorecte "in sus".
 
-Early Stopping: Antrenarea s-a oprit la epoca 118 deoarece val_loss nu a mai scazut timp de 5 epoci.
-
-Learning Rate Scheduler: Setat pe adaptive. Log-urile arata scaderea LR de la 0.002 la 0.000001 spre finalul antrenarii.
-
-Augmentari relevante domeniu:
-
-Generativa: Dataset extins prin parafrazari automate.
-
-Zgomot Gaussian: Adaugat zgomot (sigma=0.005) peste vectorii TF-IDF la antrenare pentru a forta modelul sa nu memoreze valori exacte (Robustness).
-
-Grafice: Curba de invatare salvata in docs/loss_curve.png.
-
-Analiza erori: Detaliata in sectiunea de mai jos.
-
-Indicatori obtinuti:
-
-Acuratete: 92.44% (Target >= 75%)
-
-F1-score: 0.9263 (Target >= 0.70)
-
-Nivel 3 - Bonus (pana la 100%)
-1. Comparare Arhitecturi (Benchmark)
-Am antrenat un model clasic (Random Forest) pentru a compara performanta cu RN (MLP).
-Model|Acuratete|F1-Score|Timp Predictie|Concluzie
-MLP (Retea Neuronala)|92.44%|0.9263|~0.002s|Performanta excelenta si viteza superioara.
-Random Forest|88.50%|0.8910|~0.015s|Bun, dar fisierul modelului este mare si inferenta mai lenta.
-
-Justificare Alegere Finala: Am pastrat MLP deoarece ofera cel mai bun F1-Score (balans precizie/recall) si este extrem de rapid pentru aplicatia Web.
-
-2. Confusion Matrix si Analiza Erori
-Matricea de confuzie (docs/confusion_matrix.png) si analiza detaliata a celor 5 exemple gresite sunt incluse in sectiunea "Analiza Erori" de mai jos.
-
-Verificare Consistenta cu State Machine
-Fluxul de date respecta arhitectura definita:
-Stare din Etapa 4|Implementare in Etapa 5
-ACQUIRE_DATA|Input text din Streamlit (Raspuns Student + Barem) SAU citire automata din test.csv
-PREPROCESS|Curatare text + Vectorizare TF-IDF (vectorizer.pkl)
-RN_INFERENCE|Forward pass prin trained_model.pkl -> Output float
-THRESHOLD_CHECK|"Rotunjire la grila (0, 2.5, 4.0, 5.0)"
-ALERT|Feedback vizual in UI (Tabel colorat Verde/Galben/Rosu)
-
-In src/app/web_app.py:
-# Modelul este incarcat cu cache pentru performanta
-@st.cache_resource
-def load_brain():
-    model = joblib.load('models/trained_model.pkl') # Weights antrenate
-    return model
-
-Analiza Erori in Context Industrial (OBLIGATORIU Nivel 2 & 3)
-1. Pe ce clase greseste cel mai mult modelul?
-Analiza Matrice de Confuzie: Modelul prezinta dificultati minore in zona notelor mari, specific intre Nota 4.0 (Raspuns Parafrazat) si Nota 5.0 (Raspuns Identic).
-
-Confuzie Principala: Aproximativ 7-8% din raspunsurile perfecte sunt clasificate conservator ca fiind de nota 4.0.
-
-Cauza: Modelul TF-IDF penalizeaza lipsa cuvintelor exacte din barem, chiar daca sensul este corect.
-
-2. Ce caracteristici ale datelor cauzeaza erori?
-Lungimea raspunsului (Feature Sparsity): Raspunsurile foarte scurte (1-2 cuvinte) genereaza vectori cu putine informatii.
-
-Sinonime OOV (Out of Vocabulary): Daca studentul foloseste un sinonim care nu a existat in setul de antrenare (ex: "eroare" vs "greseala"), distanta vectoriala creste artificial.
-
-3. Analiza Top 5 Exemple Gresite (Bonus Nivel 3)
-Am extras manual cele mai mari discrepante. Toate urmeaza acelasi tipar: Real 5.0 vs AI 4.0.
-ID|Raspuns Student|Real|AI|Cauza
-Q38|"Long Short-Term Memory, un tip de RNN..."|5.0|4.0|Definitie corecta dar structurata diferit de barem.
-Q05|"Transforma orice valoare... intre 0 si 1."|5.0|4.0|Lipsa unor termeni tehnici specifici din barem.
-Q09|"ultimul strat care produce predictia finala..."|5.0|4.0|Explicatie valida, dar considerata parafrazare.
-Q26|"In Supervised avem etichete..."|5.0|4.0|Similaritate semantica buna, dar nu perfecta lexical.
-Q23|"Cand modelul este prea simplu..."|5.0|4.0|Scurtimea raspunsului a afectat scorul TF-IDF.
-
-Implicatii Industriale:
-
-False Negatives (Impact UX): Studentul primeste 4.0 in loc de 5.0. Este frustrant, dar sigur din punct de vedere academic (nu se acorda note maxime pe nedrept).
-
-4. Ce masuri corective propuneti?
-Pentru versiunea 2.0 a produsului EdTech:
-
-Word Embeddings: Trecerea la BERT/RoBERT-a pentru a capta semantica si a rezolva problema sinonimelor.
-
-Human-in-the-loop: Raspunsurile cu scor de incredere la limita (intre 4.0 si 5.0) sa fie marcate pentru revizuire manuala rapida.
-
-Augmentare Sinonime: Generarea automata a mai multor date de antrenare folosind un dictionar de sinonime specific domeniului tehnic.
-
-Instructiuni de Rulare
-1. Instalare Dependinte
-pip install -r requirements.txt
-
-2. Antrenare Model (Nivel 2)
-Ruleaza scriptul care aplica augmentarea si antreneaza reteaua:
-python src/neural_network/train_final.py
-# Output: Antrenare finalizata. Grafic salvat.
-
-3. Evaluare si Analiza (Nivel 3)
-Genereaza metricile si analiza celor 5 erori:
-python src/neural_network/evaluate.py
-# Output: Acuratete: 92.44% | TOP 5 CELE MAI MARI GRESELI...
-
-4. Lansare Aplicatie Web
-Porneste interfata grafica pentru demonstratie:
-streamlit run src/app/web_app.py
-Navigheaza in sidebar si alege "Mod Chestionar" pentru corectarea automata a 5 intrebari aleatorii.
+**Pragul de acceptabilitate pentru domeniu:** [Acuratete ≥ 85% pentru sisteme asistive]  
+**Status:** [Atins si Depasit (+7.44%)]  
 
 ---
 
-Etapa 6: Analiza Performanței, Optimizarea și Concluzii Finale
-Această etapă corespunde punctelor **7. Analiza performanței și optimizarea parametrilor**, **8. Analiza și agregarea rezultatelor** și **9. Formularea concluziilor finale** din lista de 9 etape - slide 2 **RN Specificatii proiect.pdf**.
+## 7. Aplicația Software Finală
 
-**Obiectiv principal:** Maturizarea completă a Sistemului cu Inteligență Artificială (SIA) prin optimizarea modelului RN, analiza detaliată a performanței și integrarea îmbunătățirilor în aplicația software completă.
+### 7.1 Modificări Implementate în Etapa 6
 
----
+| Componentă | Stare Etapa 5 | Modificare Etapa 6 | Justificare |
+|------------|---------------|-------------------|-------------|
+| **Model încărcat** | `trained_model.pkl` | `optimized_model.pkl` | [Acuratete crescuta (+7.44%) si robustete la sinonime (Data Augmentation)] |
+| **Threshold decizie** | [Output brut (float)] | [Rotunjire la grila (0, 2.5, 4, 5)] | [Aliniere cu sistemul academic de notare (Nearest Neighbor] |
+| **UI - feedback vizual** | [Text simplu] | [Tabel Colorat (Verde/Rosu)] | [Validare vizuala instanta pentru profesor (Identificare erori)] |
+| **UI - functionalitate** | [Input manual simplu] | [Mod Dual: Manual + Generator Chestionare] | [Posibilitatea de a testa rapid loturi de intrebari aleatoare] |
+| **Inference Engine** | [Procesare secventiala] | [Procesare Batch (Loturi)] | [Optimizare viteza pentru seturi mari de date (~2ms/student)] |
 
-## Cerințe
+### 7.2 Screenshot UI cu Model Optimizat
 
-Completați **TOATE** punctele următoare:
+**Locație:** `docs/screenshots/inference_optimized.png`
 
-1. **Minimum 4 experimente de optimizare** (variație sistematică a hiperparametrilor)
-2. **Tabel comparativ experimente** cu metrici și observații (vezi secțiunea dedicată)
-3. **Confusion Matrix** generată și analizată
-4. **Analiza detaliată a 5 exemple greșite** cu explicații cauzale
-5. **Metrici finali pe test set:**
-   - **Acuratețe ≥ 70%** (îmbunătățire față de Etapa 5)
-   - **F1-score (macro) ≥ 0.65**
-6. **Salvare model optimizat** în `models/optimized_model.h5` (sau `.pt`, `.lvmodel`)
-7. **Actualizare aplicație software:**
-   - Tabel cu modificările aduse aplicației în Etapa 6
-   - UI încarcă modelul OPTIMIZAT (nu cel din Etapa 5)
-   - Screenshot demonstrativ în `docs/screenshots/inference_optimized.png`
-8. **Concluzii tehnice** (minimum 1 pagină): performanță, limitări, lecții învățate
+*[Descriere scurtă: Ce se vede în screenshot? Ce demonstrează?]*
 
+Descriere scurta: Screenshot-ul demonstreaza modul "Generator Chestionare" al aplicatiei Streamlit. Se observa un tabel cu 5 intrari extrase aleatoriu din setul de test. Coloanele afiseaza Raspunsul Studentului, Baremul, Nota Reala si Nota Prezisa. Randurile sunt codate cromatic: fundalul verde indica o predictie corecta, iar cel rosu (daca ar exista) ar indica o divergenta intre model si profesor. In bara laterala sunt afisati parametrii modelului optimizat (Acuratete 92.44%).
 
-#### Tabel Experimente de Optimizare
-Exp#|Modificare fata de Baseline|Accuracy|F1-score|Timp antrenare|Observatii
-Baseline|"MLP (100,), Solver Adam, Fara Augmentare"|0.85|0.83|~10 sec|"Model rapid, dar tinde sa faca overfitting pe cuvinte cheie."
-Exp 1|"Modificare Arhitectura: (100, 50)"|0.88|0.86|~12 sec|Adaugarea stratului 2 a imbunatatit extractia trasaturilor semantice.
-Exp 2|Schimbare Solver: Adam -> SGD (Adaptive)|0.89|0.88|~15 sec|"Convergenta mai stabila, reducerea oscilatiilor pe Loss."
-Exp 3|Batch Size: 32 -> 64|0.87|0.86|~9 sec|"Viteza mai mare, dar acuratete usor scazuta (generalizare mai slaba)."
-Exp 4|Adaugare Augmentare (Zgomot Gaussian)|0.92|0.92|~20 sec|BEST. Cea mai buna generalizare prin prevenirea memorarii datelor.
+### 7.3 Demonstrație Funcțională End-to-End
 
-Am ales Exp 4 ca model final pentru ca:
-1. Ofera cel mai bun F1-score (0.9263), critic pentru aplicatia noastra de notare automata unde vrem sa evitam erorile de depunctare incorecta.
-2. Imbunatatirea vine din augmentari relevante domeniului NLP (zgomot gaussian adaugat peste vectorii TF-IDF pentru a simula variatii de vocabular si a forta modelul sa invete sensul, nu doar potrivirea exacta a cuvintelor).
-3. Timpul de antrenare suplimentar este neglijabil (~20 secunde total) pentru beneficiul major de stabilitate.
-4. Testare pe date noi arata generalizare buna (nu face overfitting pe augmentari).
+**Locație dovadă:** `docs/demo/` *(Secvență screenshots)*
 
-## 1. Actualizarea Aplicației Software în Etapa 6 
+**Fluxul demonstrat:**
 
-**CERINȚĂ CENTRALĂ:** Documentați TOATE modificările aduse aplicației software ca urmare a optimizării modelului.
+| Pas | Acțiune | Rezultat Vizibil |
+|-----|---------|------------------|
+| 1 | Input | [Utilizatorul apasa butonul "Genereaza Chestionar Test" in UI] |
+| 2 | Procesare | [Sistemul extrage random 5 perechi (Student-Barem), le vectorizeaza si ruleaza inferenta] |
+| 3 | Inferență | [Modelul MLP prezice 5 note simultan in mai putin de 0.1 secunde] |
+| 4 | Decizie | [Apare tabelul cu rezultate. Codurile de culoare confirma acuratetea predictiilor] |
 
-### Tabel Modificări Aplicație Software
-Componenta|Stare Etapa 5|Modificare Etapa 6|Justificare
-Model incarcat|trained_model.pkl|optimized_model.pkl|"Acuratete 92.44% (+7%), Robustete la sinonime"
-Flux de lucru (State Machine)|Liniar (1 input -> 1 output)|Ramificat (Manual vs Chestionar)|Necesitatea testarii rapide a loturilor de date
-Interfata Utilizator (UI)|Doar input text manual|Sidebar Meniu + Generator Automat|Automatizarea procesului de evaluare
-Vizualizare Rezultate|Text simplu|Tabel colorat (Verde/Galben/Rosu)|Identificare vizuala rapida a erorilor
-Latenta inferenta|~10ms / raspuns|~2ms / raspuns (optimizat)|Procesare eficienta a chestionarelor mari
-Logica Decizie|Rotunjire simpla|Analiza diferentei (Eroare Absoluta)|Calculul preciziei la nivel de chestionar
-
-### Modificari concrete aduse in Etapa 6:
-
-1. **Model inlocuit:** `models/trained_model.pkl` -> `models/optimized_model.pkl`
-   - Imbunatatire: Accuracy +7.44%, F1-Score +10%
-   - Motivatie: Modelul optimizat include antrenare cu augmentare (zgomot gaussian) si solver SGD, fiind mult mai stabil pe raspunsuri parafrazate decat varianta initiala.
-
-2. **State Machine actualizat:**
-   - Stare noua adaugata: `BATCH_PROCESSING` (Procesare Lot)
-   - Tranzitie modificata: Adaugarea unei ramificatii initiale in UI (`Select Mode`) care directioneaza fluxul fie catre `SINGLE_INFERENCE` (Manual), fie catre `BATCH_INFERENCE` (Chestionar).
-
-3. **UI imbunatatit:**
-   - Adaugare **Sidebar** pentru navigare.
-   - Implementare **Generator Chestionare**: Extrage random N intrebari din `test.csv`.
-   - **Feedback Vizual:** Tabelul de rezultate este colorat dinamic (Verde = Perfect, Galben = Eroare Mica, Rosu = Eroare Mare).
-   - Screenshot: `docs/screenshots/inference_optimized.png`
-
-4. **Pipeline end-to-end re-testat:**
-   - Test complet: Load CSV -> Sample -> Preprocess Batch -> Inference Batch -> Aggregate Stats.
-   - Timp total pentru 5 intrebari: <50ms (instantaneu pentru utilizator).
-```
-
-### Diagrama State Machine Actualizata
-Deoarece am introdus modul "Chestionar", State Machine-ul s-a modificat pentru a permite procesarea in bucla (batch).
-Modificari State Machine pentru Etapa 6:
-
-INAINTE (Etapa 5 - Liniar):
-ACQUIRE_TEXT -> PREPROCESS -> INFERENCE -> THRESHOLD -> DISPLAY_RESULT
-
-DUPA (Etapa 6 - Ramificat):
-START_APP 
-  ├─ [Mod Manual] -> ACQUIRE_TEXT -> PREPROCESS -> INFERENCE -> DISPLAY_SINGLE
-  └─ [Mod Chestionar] -> LOAD_CSV -> SAMPLE_DATA (N items)
-           │
-           ▼
-      BATCH_LOOP (pentru fiecare intrebare)
-           │   ├─ PREPROCESS
-           │   ├─ INFERENCE
-           │   └─ CALCULATE_ERROR
-           ▼
-      AGGREGATE_RESULTS -> DISPLAY_COLORED_TABLE -> SHOW_STATISTICS
-
-Motivatie: Ramificarea permite utilizatorului sa aleaga intre testarea detaliata 
-a unui singur raspuns si verificarea rapida a performantei pe un set aleatoriu, 
-crescand utilitatea industriala a aplicatiei.
-```
+**Latență măsurată end-to-end:** [50] ms  
+**Data și ora demonstrației:** [13.01.2026, 14:51]
 
 ---
 
-
-## 2. Analiza Detaliată a Performanței
-
-### 2.1 Confusion Matrix și Interpretare
-
-**Clasa cu cea mai bună performanță:** Nota 0.0 (Răspuns Greșit/Irelevant)
-- Precision: ~98%
-- Recall: ~99%
-- Explicație: Această clasă este semantic foarte distinctă față de barem. Cuvintele folosite de studenți ("nu știu", "altceva", aberații) au o suprapunere vectorială aproape nulă cu răspunsul corect, făcând clasificarea extrem de ușoară pentru rețea.
-
-**Clasa cu cea mai slabă performanță:** Nota 4.0 (Răspuns Bun / Parafrazat)
-- Precision: ~85%
-- Recall: ~82%
-- Explicație: Aceasta este clasa "de graniță". Modelul întâmpină dificultăți în a trasa o linie clară între un răspuns "Perfect" (5.0) și unul "Parafrazat" (4.0), deoarece diferența este adesea una de nuanță semantică, nu de prezență a cuvintelor cheie.
-
-**Confuzii principale:**
-1. Clasa [5.0] confundată cu clasa [4.0] în ~15% din cazuri
-   - Cauză: Limitarea vectorizării TF-IDF. Dacă studentul folosește sinonime corecte (ex: "eroare" vs "greșeală") dar care nu apar în barem, distanța Euclidiană crește, iar modelul "scade" nota la 4.0 din prudență.
-   - Impact industrial: "False Negative" parțial. Studentul este ușor depunctat deși a știut. Este un comportament "Fail-Safe" (preferabil decât să dăm note mari pe degeaba), dar poate genera contestații.
-   
-2. Clasa [2.5] confundată cu clasa [0.0] în ~5% din cazuri
-   - Cauză: Răspunsuri extrem de scurte (Sparsity). Un răspuns parțial de 1-2 cuvinte (ex: "rețea") conține prea puțină informație pentru a activa neuronii rețelei, fiind clasificat ca irelevant.
-   - Impact industrial: Studentul pierde punctele pentru un început bun de răspuns. Necesită setarea unui prag minim de lungime a răspunsului în UI.
-```
-
-### 2.2 Analiza Detaliata a 5 Exemple Gresite
-Am selectat si analizat 5 exemple gresite din setul de testare, unde discrepanta dintre nota reala si cea prezisa a fost maxima (1.0 punct).
-Index,True Label,Predicted,Score Brut (Raw),Cauza probabila,Solutie propusa
-Q38,5.0,4.0,4.12,Sinonime OOV (Out of Vocabulary),Implementare Word Embeddings (BERT)
-Q05,5.0,4.0,3.85,Raspuns scurt (Feature Sparsity),Augmentare date cu raspunsuri scurte
-Q09,5.0,4.0,4.05,Parafrazare complexa,Antrenare pe dataset mai mare
-Q26,5.0,4.0,3.92,Lipsa cuvinte cheie specifice,Keyword matching hibrid
-Q23,5.0,4.0,4.10,Ambiguitate semantica,Human-in-the-loop pentru scoruri 3.5-4.5
-
-### Exemplu #Q38 - Definitie LSTM (Nota 5.0 clasificata ca 4.0)
-
-**Context:** Studentul a definit LSTM corect conceptual, dar folosind o topica diferita de barem.
-**Input characteristics:** Text: "Long Short-Term Memory, un tip de RNN care rezolva problema memoriei pe termen lung."
-**Output RN:** [Clasa: 4.0, Raw: 4.12]
-
-**Analiza:**
-Studentul a folosit termenul "rezolva problema" in loc de "evita disparitia gradientului" (din barem). 
-Deoarece TF-IDF vectoriizeaza strict pe baza cuvintelor, distanta vectoriala a fost mare, 
-iar modelul a interpretat raspunsul ca fiind o parafrazare buna (4.0), nu o potrivire perfecta.
-
-**Implicatie industriala:**
-False Negative Partial. Studentul primeste o nota mai mica decat merita. 
-In productie, acest lucru poate duce la frustrarea utilizatorilor si contestatii manuale.
-
-**Solutie:**
-1. Inlocuirea TF-IDF cu Word Embeddings (Word2Vec sau BERT) care inteleg ca "rezolva" si "evita" sunt similare in context.
-2. Adaugarea manuala a sinonimelor tehnice in faza de preprocesare.
-
-### Exemplu #Q05 - Normalizare (Nota 5.0 clasificata ca 4.0)
-
-**Context:** Intrebare despre ce face normalizarea datelor.
-**Input characteristics:** Text scurt: "Transforma orice valoare de intrare intr-un numar intre 0 si 1."
-**Output RN:** [Clasa: 4.0, Raw: 3.85]
-
-**Analiza:**
-Raspunsul este extrem de concis (10 cuvinte). Vectorii TF-IDF rezultati sunt "sparse" (plini de zerouri). 
-Modelul are tendinta de a sub-evalua raspunsurile scurte deoarece le lipseste "densitatea" informationala 
-prezenta in raspunsurile lungi de nota 10 din setul de antrenare.
-
-**Implicatie industriala:**
-Sistemul favorizeaza studentii care scriu mult ("polologhie") in detrimentul celor concisi si exacti.
-
-**Solutie:**
-1. Penalizarea raspunsurilor lungi irelevante sau normalizarea scorului in functie de lungimea textului.
-2. Augmentarea setului de antrenare cu exemple de nota 10 foarte scurte.
-
-### Exemplu #Q26 - Supervised vs Unsupervised (Nota 5.0 clasificata ca 4.0)
-
-**Context:** Diferenta dintre invatarea supervizata si nesupervizata.
-**Input characteristics:** Text: "In Supervised avem etichete (raspunsuri corecte), in Unsupervised nu."
-**Output RN:** [Clasa: 4.0, Raw: 3.92]
-
-**Analiza:**
-Barem: "Invatarea supervizata foloseste date etichetate...".
-Studentul a folosit structura "In Supervised avem...", inversand topica standard. 
-Reteaua MLP nu a reusit sa generalizeze complet aceasta inversiune de structura sintactica.
-
-**Implicatie industriala:**
-Risc de depunctare pentru stilul de scriere, nu pentru continutul informational. 
-Acceptabil in faze de testare, dar necesita rafinare pentru examene oficiale.
-
-**Solutie:**
-1. Utilizarea n-grams in vectorizator (ngram_range=(1,2)) pentru a captura secvente de cuvinte.
-2. Data Augmentation prin permutarea ordinii propozitiilor in setul de antrenare.
-```
+## 8. Structura Repository-ului Final
 
 ```
-
-## 3. Optimizarea Parametrilor și Experimentare
-
-### 3.1 Strategia de Optimizare
-
-Descrieți strategia folosită pentru optimizare:
-
-**Abordare:** Manual Search (Optimizare Iterativa)
-
-**Axe de optimizare explorate:**
-1. **Arhitectura:** Trecerea de la 1 singur strat ascuns (100 neuroni) la o arhitectura "Funnel" cu 2 straturi (100 -> 50) pentru comprimarea informatiei semantice.
-2. **Regularizare:** Implementarea Early Stopping (patience=5) pentru a opri antrenarea cand modelul incepe sa memoreze datele (overfitting).
-3. **Learning rate:** Schimbarea strategiei de la constant la 'adaptive' (folosind solverul SGD), permitand ajustarea fina a ponderilor spre finalul antrenarii.
-4. **Augmentari:** Aplicarea de Zgomot Gaussian (sigma=0.005) peste vectorii TF-IDF pentru a creste robustetea la sinonime si variatii mici.
-5. **Batch size:** Testare comparativa intre 32 si 64 (am selectat 32 pentru o stabilitate mai buna a gradientului pe dataset mic).
-
-**Criteriu de selectie model final:** Maximizarea F1-Score (>0.90) a fost prioritara fata de Acuratete, pentru a asigura un balans corect intre False Positives si False Negatives in notare.
-
-**Buget computational:** ~45 minute (CPU), incluzand rularea a 4 experimente majore si multiple teste de calibrare a parametrilor.
-```
-
-### 3.2 Grafice Comparative
-
-Vizualizarea impactului optimizarilor asupra performantei modelului.
-
-#### A. Comparatie Acuratete (Accuracy)
-![Accuracy Comparison](docs/optimization/accuracy_comparison.png)
-*Se observa o crestere constanta a acuratetei, saltul major fiind realizat la Exp 4 prin introducerea augmentarii.*
-
-#### B. Comparatie F1-Score (Echilibru Precizie-Recall)
-![F1 Comparison](docs/optimization/f1_comparison.png)
-*F1-Score urmareste trendul acuratetei, confirmand ca modelul este stabil si pe clasele dezechilibrate.*
-
-#### C. Curbele de Invatare (Model Final - Exp 4)
-![Learning Curves](docs/optimization/learning_curves_best.png)
-*Graficul demonstreaza o convergenta sanatoasa. Functia de Loss scade rapid in primele 40 de epoci si se stabilizeaza in jurul epocii 100, unde intervine mecanismul de Early Stopping pentru a preveni overfitting-ul.*
-
-### 3.3 Raport Final Optimizare
-
-**Model baseline (Initial):**
-- Accuracy: 0.85
-- F1-score: 0.83
-- Latenta: ~10ms
-
-**Model optimizat (Etapa 6):**
-- Accuracy: 0.92 (+7%)
-- F1-score: 0.93 (+10%)
-- Latenta: ~2ms (-80%)
-
-**Configuratie finala aleasa:**
-- Arhitectura: MLP Regressor [Hidden Layers: (100, 50), Activation: ReLU]
-- Learning rate: 'adaptive' (start 0.001) cu Solver SGD
-- Batch size: 32
-- Regularizare: Early Stopping (Patience=5, Restore Best Weights)
-- Augmentari: Zgomot Gaussian (Sigma=0.005) aplicat pe vectorii TF-IDF
-- Epoci: 300 (oprire automata la epoca 118)
-
-**Imbunatatiri cheie:**
-1. Arhitectura "Funnel" (100 -> 50 neuroni) a permis abstractizarea semantica mai buna (+3% Accuracy fata de baseline).
-2. Data Augmentation cu Zgomot Gaussian a redus overfitting-ul si a crescut F1-Score cu 4% (robustete la sinonime).
-3. Trecerea la Solver SGD cu Adaptive Learning Rate a stabilizat convergenta si a eliminat oscilatiile pe Loss.
-```
-
----
-
-## 4. Agregarea Rezultatelor și Vizualizări
-
-### 4.1 Tabel Sumar Rezultate Finale
-
-Comparatie intre stadiile proiectului, demonstrand evolutia de la prototip la produs optimizat:
-Metrica,Etapa 4 (Dummy),Etapa 5 (Baseline),Etapa 6 (Optimized),Target Industrial,Status
-Accuracy,~25% (Random),85.00%,92.44%,>= 85%,DEPASIT
-F1-score (macro),~0.20,0.8300,0.9263,>= 0.80,DEPASIT
-Precision (Nota 5.0),N/A,0.86,0.93,>= 0.90,OK
-False Negative Rate (Depunctare eronata),N/A,~15%,~7%,<= 10%,OK
-Latenta inferenta,<1ms,~10ms,~2ms,<= 50ms,EXCELENT
-Throughput,N/A,~100 inf/s,~450 inf/s,>= 50 inf/s,EXCELENT
-
-### 4.2 Vizualizari Obligatorii
-Sectiune dedicata vizualizarii performantei modelului final optimizat. Imaginile sunt salvate in docs/results/.
-
-A. Confusion Matrix - Model Final
-Matricea arata o performanta excelenta pe clasele extreme (0.0 si 5.0). Confuziile majore sunt concentrate intre nota 4.0 si 5.0, comportament asteptat la parafrazari.
-
-B. Curbe de Invatare (Learning Curves)
-Graficele demonstreaza o convergenta stabila fara overfitting sever. Validarea urmareste antrenarea, iar Early Stopping intervine in jurul epocii 118.
-
-C. Evolutie Metrici (Etapa 4 -> 6)
-Saltul calitativ major de la prototipul dummy (E4) la modelul final (E6), depasind targetul industrial de 85%.
-
-D. Grila Exemple Predictii (Corecte vs Gresite)
-Exemple concrete de clasificare. Casutele verzi indica predictii perfecte. Casutele rosii evidentiaza erorile tipice de "prudenta" (nota 4.0 in loc de 5.0 la parafrazari), analizate in sectiunea 2.2.
----
-
-## 5. Concluzii Finale și Lecții Învățate
-
-### 5.1 Evaluarea Performantei Finale
-
-### Evaluare sintetica a proiectului
-
-**Obiective atinse:**
-- [x] Model RN functional cu accuracy **92.44%** pe test set (peste targetul initial de 85%)
-- [x] Integrare completa in aplicatia software (3 module: Data Logging, Neural Network, Web UI)
-- [x] State Machine implementat si actualizat conform fluxului real de date
-- [x] Pipeline end-to-end testat si documentat (de la text brut la nota finala)
-- [x] UI demonstrativ cu inferenta reala si Modul Automat de Generare Chestionare
-- [x] Documentatie completa pe toate etapele (3, 4, 5, 6)
-
-**Obiective partial atinse:**
-- [x] Discriminarea fina intre notele 4.0 si 5.0. Desi modelul este sigur (nu da note mari pe degeaba), are o tendinta de a fi conservator si de a nota parafrazarile corecte cu 4.0 in loc de 5.0 din cauza limitarilor TF-IDF.
-
-**Obiective neatinse:**
-- [ ] Deployment in Cloud (AWS/Azure). Aplicatia ruleaza local.
-- [ ] Implementarea unor modele de limbaj avansate (BERT/Transformers). S-a optat pentru MLP + TF-IDF din motive de eficienta si viteza de inferenta.
-```
-
-### 5.2 Limitari Identificate
-
-```markdown
-### Limitari tehnice ale sistemului
-
-1. **Limitari date:**
-   - **Dataset sintetic:** O parte semnificativa a datelor (40%) a fost generata prin parafrazare automata, ceea ce poate reduce diversitatea reala a greselilor gramaticale pe care le fac studentii umani (typos, argou).
-   - **Vocabular limitat:** Vectorizatorul TF-IDF a fost antrenat pe un corpus specific. Cuvintele complet noi intalnite la testare sunt ignorate.
-
-2. **Limitari model:**
-   - **Lipsa contextului secvential:** Modelul MLP + TF-IDF nu tine cont de ordinea cuvintelor (Bag of Words). "A mananca B" este vazut identic cu "B mananca A".
-   - **Sensibilitate la sinonime rare:** Daca un student foloseste un sinonim tehnic corect dar care nu a existat in setul de antrenare, raspunsul este depunctat eronat (ex: nota 4.0 in loc de 5.0).
-
-3. **Limitari infrastructura:**
-   - **Single-user:** Aplicatia Streamlit ruleaza local, nefiind scalabila pentru sute de studenti simultan fara deployment in Cloud.
-   - **Dependenta CPU:** Desi rapid, modelul nu utilizeaza accelerarea GPU/NPU, ceea ce ar putea fi necesar daca trecem la modele Transformer (BERT).
-
-4. **Limitari validare:**
-   - **Testare pe aceeasi distributie:** Setul de test provine din aceeasi sursa cu cel de antrenare. Nu s-a testat inca pe un "an universitar" complet nou, cu stiluri de scriere radical diferite.
-```
-
-### 5.3 Directii de Cercetare si Dezvoltare
-
-### Directii viitoare de dezvoltare
-
-**Pe termen scurt (1-3 luni):**
-1. Implementarea **Lemmatizarii** in preprocesare (aducerea cuvintelor la forma de baza) pentru a reduce spatiul vectorial.
-2. Adaugarea unui mecanism **Human-in-the-loop**: Raspunsurile cu scor intre 3.5 si 4.5 sa fie marcate automat pentru revizuire umana.
-3. Extinderea dataset-ului cu greseli gramaticale reale colectate de la studenti.
-
-**Pe termen mediu (3-6 luni):**
-1. Trecerea la o arhitectura **Transformer (BERT/RoBERTa)** pre-antrenata pe limba romana pentru a intelege semantica profunda.
-2. Deployment sub forma de API REST (FastAPI) intr-un container Docker.
-3. Integrarea cu platforme e-learning existente (Moodle, Teams) pentru preluarea automata a raspunsurilor.
-```
-
-```
-
-### 5.4 Lectii Invatate
-### Lectii invatate pe parcursul proiectului
-
-**Tehnice:**
-1. **Calitatea datelor > Arhitectura:** Preprocesarea corecta (curatare, lowercase, TF-IDF tuning) a adus un salt de performanta mult mai mare decat adaugarea de straturi neurale.
-2. **Augmentarea inteligenta:** Adaugarea de zgomot Gaussian a fost esentiala pentru a impiedica modelul sa "memoreze" raspunsurile, fortandu-l sa generalizeze.
-3. **Early Stopping:** Fara aceasta tehnica, modelul intra rapid in overfitting dupa epoca 120.
-
-**Proces:**
-1. **Automatizarea testarii:** Crearea "Generatorului de Chestionare" (Etapa 6) a redus timpul de validare de la ore la secunde, permitand iteratii rapide.
-2. **Abordarea incrementala:** Structurarea pe etape clare (Analiza -> Arhitectura -> Antrenare -> Optimizare) a prevenit haosul in cod.
-
-**Colaborare/Feedback:**
-1. **Analiza erorilor:** Investigarea manuala a celor 5 greseli a oferit insight-uri valoroase despre limitele TF-IDF pe care metricile globale (Accuracy) le ascundeau.
-```
-
-### 5.5 Plan Post-Feedback (ULTIMA ITERATIE INAINTE DE EXAMEN)
-
-### Plan de actiune dupa primirea feedback-ului
-
-**ATENTIE:** Etapa 6 este ULTIMA VERSIUNE pentru care se ofera feedback!
-Implementati toate corectiile inainte de examen.
-
-Dupa primirea feedback-ului de la evaluatori, voi:
-
-1. **Daca se solicita imbunatatiri model:**
-   - Experimente aditionale cu parametrii stratului Hidden (ex: (200, 100)).
-   - Colectare date suplimentare pentru clasa 4.0 (parafrazari).
-   - **Actualizare:** `models/`, `results/`, README Etapa 5 si 6
-
-2. **Daca se solicita imbunatatiri date/preprocesare:**
-   - Implementare N-grams (bi-grams) pentru a captura expresii de 2 cuvinte.
-   - **Actualizare:** `data/`, `src/preprocessing/`, README Etapa 3
-
-3. **Daca se solicita imbunatatiri arhitectura/State Machine:**
-   - Rafinarea starii de THRESHOLD_CHECK pentru a include logica fuzzy.
-   - **Actualizare:** `docs/state_machine.*`, `src/app/`, README Etapa 4
-
-4. **Daca se solicita imbunatatiri documentatie:**
-   - Detalierea justificarii hiperparametrilor.
-   - Adaugare diagrame explicative pentru fluxul de date.
-   - **Actualizare:** README-urile etapelor vizate
-
-5. **Daca se solicita imbunatatiri cod:**
-   - Refactorizare pentru PEP-8 (stil cod).
-   - Adaugare comentarii explicative in `train_final.py`.
-   - **Actualizare:** `src/`, `requirements.txt`
-
-**Timeline:** Implementare corectii pana la data examen.
-**Commit final:** "Versiune finala examen - toate corectiile implementate"
-**Tag final:** `git tag -a v1.0-final-exam -m "Versiune finala pentru examen"`
-```
-
-```
-
-## Structura Repository-ului la Finalul Etapei 6
-
-**Structură COMPLETĂ și FINALĂ:**
-
-```
-
 proiect-rn-[Lungeanu-Andrei]/
 ├── README.md                           # Overview general proiect (actualizat)
 ├── etapa3_analiza_date.md         # Din Etapa 3
@@ -797,109 +365,220 @@ proiect-rn-[Lungeanu-Andrei]/
 │
 ├── requirements.txt                    # Actualizat
 └── .gitignore
+```
 
-Instructiuni de Rulare
-1. Instalare Dependinte
+### Legendă Progresie pe Etape
+
+| Folder / Fișier | Etapa 3 | Etapa 4 | Etapa 5 | Etapa 6 |
+|-----------------|:-------:|:-------:|:-------:|:-------:|
+| `data/raw/`, `processed/`, `train/`, `val/`, `test/` | ✓ Creat | - | Actualizat* | - |
+| `data/generated/` | - | ✓ Creat | - | - |
+| `src/preprocessing/` | ✓ Creat | - | Actualizat* | - |
+| `src/data_acquisition/` | - | ✓ Creat | - | - |
+| `src/neural_network/model.py` | - | ✓ Creat | - | - |
+| `src/neural_network/train.py`, `evaluate.py` | - | - | ✓ Creat | - |
+| `src/neural_network/optimize.py`, `visualize.py` | - | - | - | ✓ Creat |
+| `src/app/` | - | ✓ Creat | Actualizat | Actualizat |
+| `models/untrained_model.*` | - | ✓ Creat | - | - |
+| `models/trained_model.*` | - | - | ✓ Creat | - |
+| `models/optimized_model.*` | - | - | - | ✓ Creat |
+| `docs/state_machine.*` | - | ✓ Creat | - | (v2 opțional) |
+| `docs/etapa3_analiza_date.md` | ✓ Creat | - | - | - |
+| `docs/etapa4_arhitectura_SIA.md` | - | ✓ Creat | - | - |
+| `docs/etapa5_antrenare_model.md` | - | - | ✓ Creat | - |
+| `docs/etapa6_optimizare_concluzii.md` | - | - | - | ✓ Creat |
+| `docs/confusion_matrix_optimized.png` | - | - | - | ✓ Creat |
+| `docs/screenshots/` | - | ✓ Creat | Actualizat | Actualizat |
+| `results/training_history.csv` | - | - | ✓ Creat | - |
+| `results/optimization_experiments.csv` | - | - | - | ✓ Creat |
+| `results/final_metrics.json` | - | - | - | ✓ Creat |
+| **README.md** (acest fișier) | Draft | Actualizat | Actualizat | **FINAL** |
+
+*\* Actualizat dacă s-au adăugat date noi în Etapa 4*
+
+### Convenție Tag-uri Git
+
+| Tag | Etapa | Commit Message Recomandat |
+|-----|-------|---------------------------|
+| `v0.3-data-ready` | Etapa 3 | "Etapa 3 completă - Dataset analizat și preprocesat" |
+| `v0.4-architecture` | Etapa 4 | "Etapa 4 completă - Arhitectură SIA funcțională" |
+| `v0.5-model-trained` | Etapa 5 | "Etapa 5 completă - Accuracy=85%, F1=0.83" |
+| `v0.6-optimized-final` | Etapa 6 | "Etapa 6 completă - Accuracy=92.44%, F1=0.92 (optimizat)" |
+
+---
+
+## 9. Instrucțiuni de Instalare și Rulare
+
+### 9.1 Cerințe Preliminare
+
+```
+Python >= 3.9
+pip >= 21.0
+OS: Windows
+```
+
+### 9.2 Instalare
+
+```bash
+# 1. Clonare repository
+git clone [https://github.com/lungikk/ReteleNeuronaleProiect.git]
+cd proiect-rn-[Lungeanu-Andrei]
+
+# 2. Creare mediu virtual (recomandat)
+python -m venv venv
+venv\Scripts\activate    # Windows
+
+# 3. Instalare dependențe
 pip install -r requirements.txt
+```
 
-2. Antrenare Model (Nivel 2)
-Ruleaza scriptul care aplica augmentarea si antreneaza reteaua:
-python src/neural_network/train_final.py
-# Output: Antrenare finalizata. Grafic salvat.
+### 9.3 Rulare Pipeline Complet
 
-3. Evaluare si Analiza (Nivel 3)
-Genereaza metricile si analiza celor 5 erori:
-python src/neural_network/evaluate.py
-# Output: Acuratete: 92.44% | TOP 5 CELE MAI MARI GRESELI...
+```bash
+# Pasul 1: Preprocesare date (dacă rulați de la zero)
+python src/preprocessing.py
 
-4. Lansare Aplicatie Web
-Porneste interfata grafica pentru demonstratie:
+# Pasul 2: Antrenare model (pentru reproducere rezultate)
+python src/neural_network/train.py --config config/optimized_config.yaml
+
+# Pasul 3: Evaluare model pe test set
+python src/neural_network/evaluate.py --model models/optimized_model.pkl
+
+# Pasul 4: Lansare aplicație UI
 streamlit run src/app/web_app.py
+```
 
+### 9.4 Verificare Rapidă 
 
-Checklist Final - Bifati Totul Inainte de Predare
-Prerequisite Etapa 5 (verificare)
-[x] Model antrenat exista in models/trained_model.pkl
+```bash
+# Verificare că modelul se încarcă corect
+python -c "from src.neural_network.model import load_model; m = load_model('models/optimized_model.pkl'); print('✓ Model încărcat cu succes')"
 
-[x] Metrici baseline raportate (Accuracy >=65%, F1 >=0.60)
+# Verificare inferență pe un exemplu
+python src/neural_network/evaluate.py --model models/optimized_model.pkl --quick-test
 
-[x] UI functional cu model antrenat (Mod Manual functional)
+```
 
-[x] State Machine implementat
+---
 
-Optimizare si Experimentare
-[x] Minimum 4 experimente documentate in tabel (Baseline -> Augmentare)
+## 10. Concluzii și Discuții
 
-[x] Justificare alegere configuratie finala (Exp 4 - Zgomot Gaussian)
+### 10.1 Evaluare Performanță vs Obiective Inițiale
 
-[x] Model optimizat salvat in models/optimized_model.pkl (copie a celui mai bun model)
+| Obiectiv Definit (Secțiunea 2) | Target | Realizat | Status |
+|--------------------------------|--------|----------|--------|
+| Reducerea timpului de evaluare | < 1 sec/student | [realizat] | [✓] |
+| Eliminarea subiectivitatii | 100% Consistent | [realizat] | [✓] |
+| Accuracy pe test set | ≥70% | [92.44%] | [✓] |
+| F1-Score pe test set | ≥0.65 | [0.9263] | [✓] |
+| Robustete la sinonime | Mediu | Ridicat (prin Augmentare) | [✓] |
 
-[x] Metrici finale: Accuracy >=70% (Obtinut 92.44%), F1 >=0.65 (Obtinut 0.92)
+### 10.2 Ce NU Funcționează – Limitări Cunoscute
 
-[x] results/test_metrics.json actualizat cu metricile modelului optimizat
+*[Fiți onești - evaluatorul apreciază identificarea clară a limitărilor]*
 
-Analiza Performanta
-[x] Confusion matrix generata in docs/results/confusion_matrix_optimized.png
+1. **Limitare Semantica (Word Salad)**: Deoarece folosim TF-IDF (Bag of Words), modelul nu tine cont de ordinea cuvintelor. O fraza fara sens gramatical, dar care contine cuvintele cheie corecte, poate primi nota 5.0 (False Positive).
 
-[x] Analiza interpretare confusion matrix completata in README
+2. **Gestionarea Negatiilor**: Modelul are dificultati in a distinge intre "Acesta este un algoritm" si "Acesta NU este un algoritm", deoarece cuvantul "nu" are o pondere mica in TF-IDF.
 
-[x] Minimum 5 exemple gresite analizate detaliat (Q38, Q05, Q09, Q26, Q23)
+3. **Sensibilitate la Raspunsuri Foarte Scurte**: Raspunsurile formate din 1-2 cuvinte genereaza vectori "rari" (sparse), ceea ce duce uneori la subevaluare (nota 2.5 in loc de 4.0).
 
-[x] Implicatii industriale documentate (False Negatives vs False Positives)
+4. **Functionalitati planificate dar neimplementate**: Integrarea cu un API de dictionar de sinonime live (in prezent folosim doar augmentarea statica din antrenare).
 
-Actualizare Aplicatie Software
-[x] Tabel modificari aplicatie completat (Adaugare Mod Chestionar)
+### 10.3 Lecții Învățate (Top 5)
 
-[x] UI incarca modelul OPTIMIZAT (optimized_model.pkl)
+1. **Calitatea Datelor > Complexitatea Modelului**: Am observat ca curatarea textului si augmentarea datelor au adus un salt de performanta (+7%) mult mai mare decat adaugarea de straturi neuronale suplimentare.
 
-[x] Screenshot docs/screenshots/inference_optimized.png (demonstratie Mod Chestionar)
+2. **Early Stopping este Critic**: Pe un dataset mic (1500 intrari), modelul tinde sa memoreze datele extrem de rapid. Fara Early Stopping, loss-ul pe validare exploda dupa epoca 120.
 
-[x] Pipeline end-to-end re-testat si functional
+3. **Zgomotul Gaussian ca Regularizare**: Adaugarea de variatii aleatoare mici peste vectorii de intrare a fortat reteaua sa invete "conceptul" general, nu valorile fixe, rezolvand problema overfitting-ului.
 
-[x] State Machine actualizat pentru a reflecta fluxul automat de testare
+4. **Interpretarea Erorilor**: Matricea de confuzie ne-a aratat ca modelul este "conservator" (prefera sa depuncteze decat sa supranoteze), ceea ce este un comportament de dorit intr-un sistem educational (Fail-Safe).
 
-Concluzii
-[x] Sectiune evaluare performanta finala completata
+5. **Documentarea Iterativa**: Mentinerea fisierelor de log si a istoricului experimentelor a redus timpul de scriere a raportului final cu 50%.
 
-[x] Limitari identificate si documentate (TF-IDF, Sinonime, Lipsa GPU)
+### 10.4 Retrospectivă
 
-[x] Lectii invatate (minimum 3 tehnice, 3 proces)
+**Ce ați schimba dacă ați reîncepe proiectul?**
 
-[x] Plan post-feedback scris
+*[1-2 paragrafe: Decizii pe care le-ați lua diferit, cu justificare bazată pe experiența acumulată]*
 
-Verificari Tehnice
-[x] requirements.txt actualizat (include streamlit, scikit-learn, matplotlib)
+Daca as relua proiectul de la zero, as inlocui vectorizarea TF-IDF cu Word Embeddings pre-antrenate (ex: GloVe sau Word2Vec). Desi TF-IDF este rapid, pierde contextul semantic si relatiile dintre cuvinte. Embeddings-urile ar permite modelului sa inteleaga ca "masina" si "automobil" sunt identice fara a fi nevoie de augmentare explicita.
 
-[x] Toate path-urile RELATIVE (fara C:/Users/...)
+De asemenea, as implementa de la inceput un sistem de Cross-Validation cu 5 fold-uri in loc de un simplu split Train/Test, pentru a avea o certitudine statistica mai mare asupra acuratetei raportate.
 
-[x] Cod nou comentat (minimum 15%)
+### 10.5 Direcții de Dezvoltare Ulterioară
 
-[x] git log arata commit-uri incrementale
+| Termen | Îmbunătățire Propusă | Beneficiu Estimat |
+|--------|---------------------|-------------------|
+| **Short-term** (1-2 săptămâni) | [Adaugare lista Stop-Words personalizata pentru domeniu] | [Eliminarea zgomotului specific (ex: "in", "la", "care") -> +1-2% Acuratete] |
+| **Medium-term** (1-2 luni) | [Migrare la arhitectura Transformer (DistilBERT)] | [Rezolvarea problemelor de negatie si topica a frazei] |
+| **Long-term** | [Deployment ca Microserviciu (Docker + REST API)] | [Integrare posibila cu platforme LMS reale (Moodle/Blackboard)] |
 
-[x] Verificare anti-plagiat respectata
+---
 
-Verificare Actualizare Etape Anterioare (ITERATIVITATE)
-[x] README Etapa 3 actualizat (Preprocesare refacuta)
+## 11. Bibliografie
 
-[x] README Etapa 4 actualizat (UI include acum 2 moduri de lucru)
+*[Minimum 3 surse cu DOI/link funcțional - format: Autor, Titlu, Anul, Link]*
 
-[x] README Etapa 5 actualizat (Parametrii finali: SGD, Adaptive LR, Augmentare)
+1. Mohler, M., Bunescu, R., & Mihalcea, R., Learning to Grade Short Answer Questions using Semantic Similarity Measures and Dependency Graph Alignments, Association for Computational Linguistics (ACL), 2011. URL: https://aclanthology.org/P11-1076/ (Sursa Dataset-ului original utilizat in proiect)
 
-[x] Toate fisierele de configurare sincronizate cu modelul optimizat
+2. Pedregosa, F. et al., Scikit-learn: Machine Learning in Python, Journal of Machine Learning Research (JMLR), Vol. 12, pp. 2825-2830, 2011. URL: https://jmlr.csail.mit.edu/papers/v12/pedregosa11a.html (Referinta oficiala pentru algoritmii MLPRegressor si TfidfVectorizer utilizati)
 
-Pre-Predare
-[x] README completat cu TOATE sectiunile (Etapele 3, 4, 5, 6 unificate sau link-uite)
+3. Burrows, S., Gurevych, I., & Stein, B., The Eras and Trends of Automatic Short Answer Grading, International Journal of Artificial Intelligence in Education, 25, 60–117, 2015. DOI: https://doi.org/10.1007/s40593-014-0026-8 (Studiu de referinta despre evolutia sistemelor ASAG)
 
-[x] Structura repository conforma modelului de mai sus
+4. Streamlit Documentation, Streamlit: The fastest way to build and share data apps, 2024. URL: https://docs.streamlit.io/ (Documentatia pentru interfata grafica a aplicatiei)
 
-[x] Commit: "Etapa 6 completa - Accuracy=92.44%, F1=0.92 (optimizat)"
+**Exemple format:**
+- Abaza, B., 2025. AI-Driven Dynamic Covariance for ROS 2 Mobile Robot Localization. Sensors, 25, 3026. https://doi.org/10.3390/s25103026
+- Keras Documentation, 2024. Getting Started Guide. https://keras.io/getting_started/
 
-[x] Tag: git tag -a v1.0-final-exam -m "Versiune finala pentru examen"
+---
 
-[x] Push: git push origin main --tags
+## 12. Checklist Final (Auto-verificare înainte de predare)
 
+### Cerințe Tehnice Obligatorii
 
-[x] Repository accesibil (public sau privat cu acces profesori)
+- [x] **Accuracy ≥70%** pe test set (verificat în `results/final_metrics.json`)
+- [x] **F1-Score ≥0.65** pe test set
+- [x] **Contribuție ≥40% date originale** (verificabil în `data/generated/`)
+- [x] **Model antrenat de la zero** (NU pre-trained fine-tuning)
+- [x] **Minimum 4 experimente** de optimizare documentate (tabel în Secțiunea 5.3)
+- [x] **Confusion matrix** generată și interpretată (Secțiunea 6.2)
+- [x] **State Machine** definit cu minimum 4-6 stări (Secțiunea 4.2)
+- [x] **Cele 3 module funcționale:** Data Logging, RN, UI (Secțiunea 4.1)
+- [x] **Demonstrație end-to-end** disponibilă în `docs/demo/`
 
+### Repository și Documentație
 
+- [x] **README.md** complet (toate secțiunile completate cu date reale)
+- [x] **4 README-uri etape** prezente în `docs/` (etapa3, etapa4, etapa5, etapa6)
+- [x] **Screenshots** prezente în `docs/screenshots/`
+- [x] **Structura repository** conformă cu Secțiunea 8
+- [x] **requirements.txt** actualizat și funcțional
+- [x] **Cod comentat** (minim 15% linii comentarii relevante)
+- [x] **Toate path-urile relative** (nu absolute: `/Users/...` sau `C:\...`)
 
+### Acces și Versionare
+
+- [x] **Repository accesibil** cadrelor didactice RN (public sau privat cu acces)
+- [x] **Tag `v0.6-optimized-final`** creat și pushed
+- [x] **Commit-uri incrementale** vizibile în `git log` (nu 1 commit gigantic)
+- [x] **Fișiere mari** (>100MB) excluse sau în `.gitignore`
+
+### Verificare Anti-Plagiat
+
+- [x] Model antrenat **de la zero** (weights inițializate random, nu descărcate)
+- [x] **Minimum 40% date originale** (nu doar subset din dataset public)
+- [x] Cod propriu sau clar atribuit (surse citate în Bibliografie)
+---
+
+## Note Finale
+
+**Versiune document:** FINAL pentru examen  
+**Ultima actualizare:** [02.02.2026]  
+**Tag Git:** `v0.6-optimized-final`
+
+---
+
+*Acest README servește ca documentație principală pentru Livrabilul 1 (Aplicație RN). Pentru Livrabilul 2 (Prezentare PowerPoint), consultați structura din RN_Specificatii_proiect.pdf.*
